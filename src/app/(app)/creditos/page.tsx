@@ -1,5 +1,10 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
+import { useState, useEffect, Suspense } from 'react'
+...resto del código igual
+
 import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
