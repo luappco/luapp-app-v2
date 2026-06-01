@@ -1,4 +1,4 @@
-'use client'
+ 'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -33,7 +33,7 @@ const CIUDADES: Record<string, string[]> = {
   '🇫🇷 Francia': ['París','Lyon','Marsella'],
 }
 
-interface Usuario { id:string; alias:string; edad:number; ciudad:string; busca:string; foto_principal?:string; online?:boolean; foto_url?:string }
+interface Usuario { id:string; alias:string; edad:number; ciudad:string; busca:string; foto_principal?:string; online?:boolean; foto_url?:string | null }
 interface MiPerfil { alias:string; ciudad:string; creditos:number }
 
 export default function ExplorarPage() {
