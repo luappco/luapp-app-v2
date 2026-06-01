@@ -33,7 +33,7 @@ const CIUDADES: Record<string, string[]> = {
   '🇫🇷 Francia': ['París','Lyon','Marsella'],
 }
 
-interface Usuario { id:string; alias:string; edad:number; ciudad:string; busca:string; foto_principal?:string; online?:boolean; foto_url?:string | null }
+interface Usuario { id:string; alias:string; edad:number; ciudad:string; busca:string; foto_principal?:string; online?:boolean; foto_url?:string | null } 
 interface MiPerfil { alias:string; ciudad:string; creditos:number }
 
 const LOGO = 'https://luapp.co/images/logo/logo-color.webp'
