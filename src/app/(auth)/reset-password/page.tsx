@@ -1,18 +1,45 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-export default function ResetPasswordPage() {
+const LOGO = 'https://luapp.co/images/logo/logo-color.webp'
+
+function ResetPasswordContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
 
+  const [listo, setListo] = useState(false)
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    // Supabase envía el token en la URL — hay que intercambiarlo por sesión
+    const code = searchParams.get('code')
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          setError('El enlace expiró o ya fue usado. Pide uno nuevo.')
+        }
+        setListo(true)
+      })
+    } else {
+      // Puede venir por fragmento (#) en vez de query param
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) {
+          setListo(true)
+        } else {
+          setError('Enlace inválido. Pide un nuevo correo de recuperación.')
+          setListo(true)
+        }
+      })
+    }
+  }, [])
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,76 +58,75 @@ export default function ResetPasswordPage() {
     const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {
-      setError('Error al actualizar. El enlace puede haber expirado.')
+      setError('Error al actualizar. Intenta de nuevo.')
       setLoading(false)
       return
     }
 
     setSuccess(true)
-    setTimeout(() => router.push('/explorar'), 2000)
+    setTimeout(() => router.replace('/explorar'), 2500)
   }
 
+  // Splash mientras intercambia el código
+  if (!listo) return (
+    <div style={{ minHeight:'100vh', background:'#fff8f1', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20 }}>
+      <img src={LOGO} alt="LUAPP" style={{ width:130, height:'auto' }} />
+      <div style={{ width:28, height:28, border:'3px solid #f0d4d8', borderTop:'3px solid #af2245', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  )
+
   return (
-    <div className="min-h-screen bg-[#fdf6f0] flex flex-col items-center justify-center px-4">
-      {/* Logo */}
-      <div className="mb-8 text-center">
-        <div className="text-5xl mb-2">🔥</div>
-        <h1 className="text-3xl font-bold text-rose-500 tracking-tight">LUAPP</h1>
-        <p className="text-xs text-gray-400 tracking-widest uppercase mt-1">Tu secreto está a salvo</p>
+    <div style={{ minHeight:'100vh', background:'#fff8f1', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'0 16px' }}>
+      <div style={{ marginBottom:24, textAlign:'center' }}>
+        <img src={LOGO} alt="LUAPP" style={{ height:44, width:'auto' }} />
+        <p style={{ fontSize:11, color:'#9ca3af', letterSpacing:'0.08em', textTransform:'uppercase', marginTop:6 }}>Tu secreto está a salvo</p>
       </div>
 
-      <div className="w-full max-w-sm bg-white rounded-3xl shadow-sm p-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-1">Nueva contraseña</h2>
-        <p className="text-sm text-gray-400 mb-6">Elige una contraseña segura</p>
+      <div style={{ width:'100%', maxWidth:380, background:'white', borderRadius:24, padding:32 }}>
+        <h2 style={{ fontSize:20, fontWeight:700, color:'#2A1840', marginBottom:4 }}>Nueva contraseña</h2>
+        <p style={{ fontSize:13, color:'#9ca3af', marginBottom:24 }}>Elige una contraseña segura</p>
 
         {success ? (
-          <div className="text-center">
-            <div className="text-4xl mb-3">✅</div>
-            <p className="text-sm text-green-600 font-semibold">¡Contraseña actualizada!</p>
-            <p className="text-xs text-gray-400 mt-1">Redirigiendo...</p>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontSize:48, marginBottom:12 }}>✅</div>
+            <p style={{ fontSize:14, color:'#16a34a', fontWeight:600 }}>¡Contraseña actualizada!</p>
+            <p style={{ fontSize:12, color:'#9ca3af', marginTop:4 }}>Redirigiendo a la app...</p>
           </div>
         ) : (
-          <form onSubmit={handleReset} className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Nueva contraseña
-              </label>
+          <form onSubmit={handleReset}>
+            <div style={{ marginBottom:16 }}>
+              <label style={{ fontSize:11, fontWeight:600, color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.06em' }}>Nueva contraseña</label>
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
                 required
-                className="mt-1 w-full px-4 py-3 rounded-2xl border border-gray-200 text-sm 
-                  focus:outline-none focus:border-rose-400 bg-gray-50"
+                style={{ marginTop:6, width:'100%', padding:'12px 16px', borderRadius:16, border:'0.5px solid #e0bec1', fontSize:14, background:'#f9fafb', outline:'none', boxSizing:'border-box' }}
               />
             </div>
 
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Confirmar contraseña
-              </label>
+            <div style={{ marginBottom:16 }}>
+              <label style={{ fontSize:11, fontWeight:600, color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.06em' }}>Confirmar contraseña</label>
               <input
                 type="password"
                 value={confirm}
                 onChange={e => setConfirm(e.target.value)}
                 placeholder="Repite la contraseña"
                 required
-                className="mt-1 w-full px-4 py-3 rounded-2xl border border-gray-200 text-sm 
-                  focus:outline-none focus:border-rose-400 bg-gray-50"
+                style={{ marginTop:6, width:'100%', padding:'12px 16px', borderRadius:16, border:'0.5px solid #e0bec1', fontSize:14, background:'#f9fafb', outline:'none', boxSizing:'border-box' }}
               />
             </div>
 
             {error && (
-              <p className="text-sm text-rose-500 text-center">{error}</p>
+              <p style={{ fontSize:13, color:'#af2245', textAlign:'center', marginBottom:12 }}>{error}</p>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-rose-500 to-rose-400 text-white 
-                font-semibold rounded-2xl uppercase tracking-wider text-sm
-                hover:opacity-90 transition disabled:opacity-50"
+              style={{ width:'100%', padding:'14px 0', borderRadius:50, border:'none', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', fontSize:12, fontWeight:600, letterSpacing:'0.08em', textTransform:'uppercase', cursor:'pointer', opacity: loading ? 0.6 : 1, boxShadow:'0 8px 24px rgba(175,34,69,0.3)' }}
             >
               {loading ? 'Guardando...' : 'Guardar contraseña'}
             </button>
@@ -108,5 +134,18 @@ export default function ResetPasswordPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight:'100vh', background:'#fff8f1', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <div style={{ width:28, height:28, border:'3px solid #f0d4d8', borderTop:'3px solid #af2245', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   )
 }
