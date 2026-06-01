@@ -371,5 +371,5 @@ export default function ExplorarPage() {
       </div>
     </div>
   )
-}
+
 }
