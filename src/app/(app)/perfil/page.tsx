@@ -40,11 +40,15 @@ export default function PerfilPage() {
   useEffect(() => { cargarPerfil() }, [])
 
   const cargarPerfil = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push('/login'); return }
-    const { data } = await supabase.from('usuarios').select('*').eq('id', user.id).single()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) { router.push('/login'); return }
+    const uid = session.user.id
+    // Consultas en paralelo para carga rápida
+    const [{ data }, _] = await Promise.all([
+      supabase.from('usuarios').select('*').eq('id', uid).single(),
+      cargarFotos(uid),
+    ])
     setUsuario(data)
-    await cargarFotos(user.id)
     setCargando(false)
   }
 
