@@ -330,7 +330,7 @@ export default function PerfilPage() {
 
           {/* Créditos */}
           <button onClick={() => router.push('/creditos')}
-            style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', borderBottom:'0.5px solid #f9f5f0', background:'none', border:'none', borderBottom:'0.5px solid #f9f5f0', cursor:'pointer' }}>
+            style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', background:'none', border:'none', borderBottom:'0.5px solid #f9f5f0', cursor:'pointer' }}>
             <div style={{ textAlign:'left' }}>
               <div style={{ fontSize:13, fontWeight:600, color:'#2A1840' }}>Mis créditos</div>
               <div style={{ fontSize:11, color:'#9ca3af' }}>{usuario?.creditos || 0} disponibles</div>
