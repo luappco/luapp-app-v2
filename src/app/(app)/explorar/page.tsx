@@ -26,7 +26,7 @@ const IconMenu = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="non
 const IconClose = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 const IconMessage = ({ size = 16 }: { size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 
-/* Iconos grandes para stats */
+/* Iconos para stats */
 const IconGauge = () => <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter:'drop-shadow(0 0 6px rgba(239,68,68,0.6))' }}><path d="M12 14l4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/><circle cx="12" cy="14" r="1.5" fill="#ef4444"/></svg>
 const IconHeartGlow = () => <svg width="46" height="46" viewBox="0 0 24 24" fill="#af2245" stroke="#ef4444" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ filter:'drop-shadow(0 0 8px rgba(239,68,68,0.7))' }}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
 const IconMatchGlow = () => <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter:'drop-shadow(0 0 6px rgba(239,68,68,0.6))' }}><circle cx="8" cy="10" r="3.2"/><circle cx="16" cy="10" r="3.2"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0M10.5 20a5.5 5.5 0 0 1 11 0"/><path d="M12 4l.7 1.4 1.5.2-1.1 1.1.3 1.5-1.4-.7-1.4.7.3-1.5-1.1-1.1 1.5-.2z" fill="#ef4444" stroke="none"/></svg>
@@ -59,7 +59,7 @@ export default function ExplorarPage() {
   const [visitantes, setVisitantes] = useState<Usuario[]>([])
   const [cargando, setCargando] = useState(true)
   const [flechazosEnviados, setFlechazosEnviados] = useState<Set<string>>(new Set())
-  const [pasos, setPasos] = useState<Set<string>>(new Set())
+  const [saltados, setSaltados] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [carruselIdx, setCarruselIdx] = useState(0)
 
@@ -125,8 +125,6 @@ export default function ExplorarPage() {
     }
   }
 
-  const darPaso = (id: string) => setPasos(prev => new Set([...prev, id]))
-
   const logout = async () => { await supabase.auth.signOut(); router.push('/login') }
 
   if (cargando) return (
@@ -141,7 +139,8 @@ export default function ExplorarPage() {
     <span style={{ position:'absolute', top:-4, right:-4, background:'#af2245', color:'white', borderRadius:'50%', minWidth:14, height:14, fontSize:8, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', padding:'0 3px', border:'1.5px solid #1a0f2e' }}>{n}</span>
   ) : null
 
-  const visiblesCarrusel = perfiles.slice(carruselIdx, carruselIdx + 3)
+  const perfilesVisibles = perfiles.filter(p => !saltados.has(p.id))
+  const visiblesCarrusel = perfilesVisibles.slice(carruselIdx, carruselIdx + 3)
 
   /* ── Sidebar ── */
   const SidebarContent = () => (
@@ -267,7 +266,6 @@ export default function ExplorarPage() {
         .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 14px; }
         .content-grid { display: grid; grid-template-columns: 1fr 310px 290px; gap: 14px; align-items: start; }
         .stat-card { position: relative; background: linear-gradient(160deg,rgba(60,30,90,0.55),rgba(40,15,60,0.7)); border: 1px solid rgba(212,175,55,0.25); border-radius: 18px; padding: 18px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
-        .stat-card::before { content:''; position: absolute; inset: 0; border-radius: 18px; padding: 1px; background: linear-gradient(135deg,rgba(212,175,55,0.5),transparent 50%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
         .card-w { background: linear-gradient(160deg,rgba(60,30,90,0.55),rgba(40,15,60,0.7)); border: 1px solid rgba(212,175,55,0.22); border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
         .bottom-nav { display: none; }
         .mobile-drawer { display: none; }
@@ -348,71 +346,43 @@ export default function ExplorarPage() {
         <div>
           {/* Stats */}
           <div className="stats-grid">
-            {/* Visitantes hoy */}
-            <div className="stat-card">
-              <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.85)', marginBottom:14 }}>Visitantes de hoy</div>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-                <div style={{ fontSize:38, fontWeight:800, color:'white', lineHeight:1 }}>24</div>
-                <IconGauge />
-              </div>
-              <div style={{ fontSize:10, color:'rgba(255,255,255,0.55)', lineHeight:1.5 }}>
-                Visitas únicas: 24<br/>Repetidos: 12
-              </div>
-            </div>
-
-            {/* Flechazos */}
-            <div className="stat-card">
-              <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.85)', marginBottom:14 }}>Flechazos recibidos</div>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-                <div style={{ fontSize:38, fontWeight:800, color:'white', lineHeight:1 }}>8</div>
-                <IconHeartGlow />
-              </div>
-              <div style={{ display:'inline-block', fontSize:10, fontWeight:700, color:'#fef3c7', background:'linear-gradient(135deg,#92400e,#d4af37)', padding:'4px 14px', borderRadius:12, clipPath:'polygon(0 0,100% 0,90% 50%,100% 100%,0 100%)' }}>
-                Top 5%
-              </div>
-            </div>
-
-            {/* Matches */}
-            <div className="stat-card">
-              <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.85)', marginBottom:14 }}>Matches nuevos</div>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-                <div style={{ fontSize:38, fontWeight:800, color:'white', lineHeight:1 }}>3</div>
-                <IconMatchGlow />
-              </div>
-              <div style={{ fontSize:10, color:'rgba(255,255,255,0.55)', lineHeight:1.5 }}>
-                Matches totales: 12<br/>Pendientes: 2
-              </div>
-            </div>
-
-            {/* Créditos */}
-            <div className="stat-card">
-              <div style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.85)', marginBottom:14 }}>Mis Créditos</div>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-                <div style={{ fontSize:38, fontWeight:800, color:'white', lineHeight:1 }}>{miPerfil?.creditos ?? 0}</div>
-                <IconCoinGlow />
-              </div>
-              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <button onClick={() => router.push('/creditos')}
-                  style={{ fontSize:10, fontWeight:800, color:'#d4af37', background:'transparent', border:'1px solid #d4af37', borderRadius:14, padding:'4px 14px', cursor:'pointer', letterSpacing:'0.06em' }}>
-                  RECARGAR
+            {[
+              { num:24, lbl:'Visitantes de hoy', icon:<IconGauge />, tag:'+32%', tagColor:'#16a34a', tagBg:'#f0fdf4' },
+              { num:8, lbl:'Flechazos recibidos', icon:<IconHeartGlow />, tag:'Top 5%', tagColor:'#92400e', tagBg:'#fef3c7' },
+              { num:3, lbl:'Matches nuevos', icon:<IconMatchGlow />, tag:'Chatea ya', tagColor:'#af2245', tagBg:'#fff0f3', tagClick:'/mensajes' },
+              { num: miPerfil?.creditos ?? 0, lbl:'Mis créditos', icon:<IconCoinGlow />, tag:'Recargar', tagColor:'white', tagBg:'linear-gradient(135deg,#af2245,#f07855)', tagClick:'/creditos' },
+            ].map(s => (
+              <div key={s.lbl} className="stat-card">
+                <div style={{ fontSize:13, fontWeight:600, color:'#374151', marginBottom:10 }}>{s.lbl}</div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                  <div style={{ fontSize:32, fontWeight:800, color:'#1e1b17', lineHeight:1 }}>{s.num}</div>
+                  {s.icon}
+                </div>
+                <button
+                  onClick={() => s.tagClick && router.push(s.tagClick)}
+                  style={{ fontSize:11, fontWeight:700, color:s.tagColor, background:s.tagBg, border:'none', borderRadius:14, padding:'4px 12px', cursor: s.tagClick ? 'pointer' : 'default' }}>
+                  {s.tag}
                 </button>
-                <span style={{ fontSize:9, color:'rgba(255,255,255,0.5)' }}>Última: hoy</span>
               </div>
-            </div>
+            ))}
           </div>
 
-          {/* Contenido principal */}
+          {/* Grid de contenido */}
           <div className="content-grid">
+
             {/* Carrusel */}
             <div className="card-w" style={{ padding:18 }}>
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
                 <div style={{ display:'flex', alignItems:'center', gap:8, fontSize:15, fontWeight:700, color:'white' }}>
-                  Miembro del Día <IconCrown /> Nuevos Miembros
+                  Miembro del día <IconCrown /> Nuevos
                 </div>
-                <button style={{ fontSize:12, fontWeight:600, color:'#d4af37', background:'none', border:'none', cursor:'pointer' }}>Ver más →</button>
+                <button onClick={() => carruselIdx < perfilesVisibles.length - 3 ? setCarruselIdx(i => i + 3) : null}
+                  style={{ fontSize:12, fontWeight:600, color:'#d4af37', background:'none', border:'none', cursor:'pointer', padding:0 }}>
+                  Ver más →
+                </button>
               </div>
 
-              {perfiles.length === 0 ? (
+              {perfilesVisibles.length === 0 ? (
                 <div style={{ padding:'40px 0', textAlign:'center', color:'rgba(255,255,255,0.5)' }}>
                   <p style={{ fontSize:13, margin:0 }}>Sin perfiles disponibles aún.</p>
                 </div>
@@ -423,7 +393,7 @@ export default function ExplorarPage() {
                       const enviado = flechazosEnviados.has(u.id)
                       const esDestacado = idx === 0 && carruselIdx === 0
                       return (
-                        <div key={u.id} style={{ borderRadius:14, overflow:'hidden', position:'relative', background:'#1a0f2e', boxShadow: esDestacado ? '0 0 18px rgba(239,68,68,0.55), 0 0 4px rgba(239,68,68,0.8) inset' : '0 4px 12px rgba(0,0,0,0.3)', border: esDestacado ? '1px solid rgba(239,68,68,0.7)' : '1px solid rgba(212,175,55,0.18)' }}>
+                        <div key={u.id} style={{ borderRadius:14, overflow:'hidden', position:'relative', background:'#1a0f2e', boxShadow: esDestacado ? '0 0 18px rgba(239,68,68,0.55), 0 0 4px rgba(239,68,68,0.8) inset' : '0 4px 12px rgba(0,0,0,0.3)', border: esDestacado ? '1px solid rgba(239,68,68,0.7)' : '1px solid rgba(212,175,55,0.18)', cursor:'pointer' }} onClick={() => router.push(`/perfil/${u.id}`)}>
                           <div style={{ position:'relative', aspectRatio:'3/3.6', background:'linear-gradient(160deg,#2A1840,#af2245)' }}>
                             {u.foto_url
                               ? <img src={u.foto_url} alt={u.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
@@ -437,14 +407,14 @@ export default function ExplorarPage() {
                               </div>
                             </div>
                             {/* Botones acción flotantes */}
-                            <div style={{ position:'absolute', top:8, right:8, display:'flex', flexDirection:'column', gap:6 }}>
+                            <div style={{ position:'absolute', top:8, right:8, display:'flex', flexDirection:'column', gap:6 }} onClick={e => e.stopPropagation()}>
                               <button onClick={() => darFlechazo(u.id)}
                                 style={{ width:30, height:30, borderRadius:'50%', border:'none', background: enviado ? '#af2245' : 'rgba(255,255,255,0.15)', backdropFilter:'blur(6px)', color:'white', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
                                 <IconHeart filled={enviado} size={14} />
                               </button>
-                              <button onClick={() => darPaso(u.id)}
-                                style={{ width:30, height:30, borderRadius:'50%', border:'none', background:'rgba(255,255,255,0.15)', backdropFilter:'blur(6px)', color: pasos.has(u.id) ? '#9ca3af' : 'white', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                                <IconX />
+                              <button onClick={() => setSaltados(prev => new Set([...prev, u.id]))}
+                                style={{ width:30, height:30, borderRadius:'50%', border:'none', background:'rgba(255,255,255,0.15)', backdropFilter:'blur(6px)', color:'white', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                                <IconX size={12} />
                               </button>
                             </div>
                             {u.online && <span style={{ position:'absolute', top:10, left:10, width:9, height:9, borderRadius:'50%', background:'#22c55e', border:'2px solid white' }} />}
@@ -454,25 +424,25 @@ export default function ExplorarPage() {
                     })}
                   </div>
 
-                  {perfiles.length > 3 && (
+                  {perfilesVisibles.length > 3 && (
                     <>
                       <button onClick={() => setCarruselIdx(i => Math.max(0, i - 3))}
                         disabled={carruselIdx === 0}
                         style={{ position:'absolute', left:-14, top:'46%', width:38, height:38, borderRadius:'50%', background:'rgba(40,15,60,0.95)', border:'1px solid rgba(212,175,55,0.4)', boxShadow:'0 4px 12px rgba(0,0,0,0.4)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color: carruselIdx === 0 ? 'rgba(255,255,255,0.25)' : '#d4af37' }}>
                         <IconChevL size={18} />
                       </button>
-                      <button onClick={() => setCarruselIdx(i => Math.min(Math.max(0, perfiles.length - 3), i + 3))}
-                        disabled={carruselIdx >= perfiles.length - 3}
-                        style={{ position:'absolute', right:-14, top:'46%', width:38, height:38, borderRadius:'50%', background:'rgba(40,15,60,0.95)', border:'1px solid rgba(212,175,55,0.4)', boxShadow:'0 4px 12px rgba(0,0,0,0.4)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color: carruselIdx >= perfiles.length - 3 ? 'rgba(255,255,255,0.25)' : '#d4af37' }}>
+                      <button onClick={() => setCarruselIdx(i => Math.min(Math.max(0, perfilesVisibles.length - 3), i + 3))}
+                        disabled={carruselIdx >= perfilesVisibles.length - 3}
+                        style={{ position:'absolute', right:-14, top:'46%', width:38, height:38, borderRadius:'50%', background:'rgba(40,15,60,0.95)', border:'1px solid rgba(212,175,55,0.4)', boxShadow:'0 4px 12px rgba(0,0,0,0.4)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color: carruselIdx >= perfilesVisibles.length - 3 ? 'rgba(255,255,255,0.25)' : '#d4af37' }}>
                         <IconChevR size={18} />
                       </button>
                     </>
                   )}
 
                   {/* Dots */}
-                  {perfiles.length > 3 && (
+                  {perfilesVisibles.length > 3 && (
                     <div style={{ display:'flex', justifyContent:'center', gap:6, marginTop:16 }}>
-                      {Array.from({ length: Math.ceil(perfiles.length / 3) }).map((_, i) => (
+                      {Array.from({ length: Math.ceil(perfilesVisibles.length / 3) }).map((_, i) => (
                         <div key={i}
                           onClick={() => setCarruselIdx(i * 3)}
                           style={{ width: Math.floor(carruselIdx / 3) === i ? 22 : 6, height:5, borderRadius:3, background: Math.floor(carruselIdx / 3) === i ? '#d4af37' : 'rgba(255,255,255,0.2)', cursor:'pointer', transition:'all 0.2s' }} />
@@ -491,7 +461,7 @@ export default function ExplorarPage() {
               ) : (
                 <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
                   {conectados.map(u => (
-                    <div key={u.id} style={{ display:'flex', alignItems:'center', gap:11, cursor:'pointer' }}>
+                    <div key={u.id} style={{ display:'flex', alignItems:'center', gap:11, cursor:'pointer' }} onClick={() => router.push(`/perfil/${u.id}`)}>
                       <div style={{ position:'relative', flexShrink:0 }}>
                         <div style={{ width:46, height:46, borderRadius:'50%', overflow:'hidden', background:'linear-gradient(135deg,#2A1840,#af2245)', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.4)' }}>
                           {u.foto_url
@@ -519,7 +489,7 @@ export default function ExplorarPage() {
                 <>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
                     {visitantes.slice(0, 9).map(u => (
-                      <div key={u.id} style={{ aspectRatio:'1', borderRadius:10, overflow:'hidden', background:'linear-gradient(135deg,#2A1840,#af2245)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.35)', border:'1px solid rgba(212,175,55,0.15)' }}>
+                      <div key={u.id} style={{ aspectRatio:'1', borderRadius:10, overflow:'hidden', background:'linear-gradient(135deg,#2A1840,#af2245)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.35)', border:'1px solid rgba(212,175,55,0.15)' }} onClick={() => router.push(`/perfil/${u.id}`)}>
                         {u.foto_url
                           ? <img src={u.foto_url} alt={u.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
                           : <IconUser size={22} />}
