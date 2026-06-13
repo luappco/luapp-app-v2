@@ -6,10 +6,10 @@ import { createClient } from '@/lib/supabase/client'
 
 const LOGO = 'https://luapp.co/images/logo/logo-color.webp'
 
-/* ────────── Iconos SVG ────────── */
 const IconSearch = ({ size = 16 }: { size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
 const IconHeart = ({ filled, size = 18 }: { filled?: boolean; size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? '#af2245' : 'none'} stroke={filled ? '#af2245' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
 const IconX = ({ size = 14 }: { size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+const IconClose = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 const IconMail = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
 const IconStar = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
 const IconEye = ({ size = 22 }: { size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -23,10 +23,8 @@ const IconChevronUp = () => <svg width="14" height="14" viewBox="0 0 24 24" fill
 const IconChevL = ({ size = 22 }: { size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
 const IconChevR = ({ size = 22 }: { size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
 const IconMenu = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-const IconClose = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 const IconMessage = ({ size = 16 }: { size?: number }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 
-/* Iconos para stats */
 const IconGauge = () => <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter:'drop-shadow(0 0 6px rgba(239,68,68,0.6))' }}><path d="M12 14l4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/><circle cx="12" cy="14" r="1.5" fill="#ef4444"/></svg>
 const IconHeartGlow = () => <svg width="46" height="46" viewBox="0 0 24 24" fill="#af2245" stroke="#ef4444" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ filter:'drop-shadow(0 0 8px rgba(239,68,68,0.7))' }}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
 const IconMatchGlow = () => <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ filter:'drop-shadow(0 0 6px rgba(239,68,68,0.6))' }}><circle cx="8" cy="10" r="3.2"/><circle cx="16" cy="10" r="3.2"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0M10.5 20a5.5 5.5 0 0 1 11 0"/><path d="M12 4l.7 1.4 1.5.2-1.1 1.1.3 1.5-1.4-.7-1.4.7.3-1.5-1.1-1.1 1.5-.2z" fill="#ef4444" stroke="none"/></svg>
@@ -47,6 +45,7 @@ const CIUDADES: Record<string, string[]> = {
 
 interface Usuario { id:string; alias:string; edad:number; ciudad:string; busca:string; bio?:string; foto_principal?:string; online?:boolean; status?:string; foto_url?:string | null }
 interface MiPerfil { alias:string; ciudad:string; creditos:number }
+interface Flechazo { id: string; alias: string; edad: number; foto_url?: string | null }
 
 export default function ExplorarPage() {
   const router = useRouter()
@@ -71,6 +70,10 @@ export default function ExplorarPage() {
   const [ciudadFiltro, setCiudadFiltro] = useState('')
   const [ciudadOpen, setCiudadOpen] = useState(false)
   const [busca, setBusca] = useState('')
+
+  // Modal
+  const [perfilSeleccionado, setPerfilSeleccionado] = useState<(Usuario & { flechazosRecibidos: Flechazo[] }) | null>(null)
+  const [cargandoModal, setCargandoModal] = useState(false)
 
   useEffect(() => { init() }, [])
 
@@ -106,6 +109,43 @@ export default function ExplorarPage() {
     setVisitantes(mapped.slice(0, 9))
   }
 
+  const abrirPerfil = async (usuario: Usuario) => {
+    setCargandoModal(true)
+    const { data: flechazos } = await supabase
+      .from('flechazos')
+      .select('emisor')
+      .eq('receptor', usuario.id)
+
+    let flechazosRecibidos: Flechazo[] = []
+    if (flechazos && flechazos.length > 0) {
+      const emisoresIds = flechazos.map(f => f.emisor)
+      const { data: emisores } = await supabase
+        .from('usuarios')
+        .select('id, alias, edad, foto_principal')
+        .in('id', emisoresIds)
+      
+      if (emisores) {
+        flechazosRecibidos = emisores.map(e => ({
+          id: e.id,
+          alias: e.alias,
+          edad: e.edad,
+          foto_url: e.foto_principal
+            ? (e.foto_principal.startsWith('http')
+                ? e.foto_principal
+                : supabase.storage.from('fotos').getPublicUrl(e.foto_principal).data.publicUrl)
+            : null,
+        }))
+      }
+    }
+
+    setPerfilSeleccionado({ ...usuario, flechazosRecibidos })
+    setCargandoModal(false)
+  }
+
+  const cerrarPerfil = () => {
+    setPerfilSeleccionado(null)
+  }
+
   const darFlechazo = async (targetId: string) => {
     if (flechazosEnviados.has(targetId)) return
     const { data: { session } } = await supabase.auth.getSession()
@@ -117,6 +157,39 @@ export default function ExplorarPage() {
     await supabase.rpc('sumar_creditos', { uid, monto: -1 })
     setFlechazosEnviados(prev => new Set([...prev, targetId]))
     setMiPerfil(prev => prev ? { ...prev, creditos: prev.creditos - 1 } : prev)
+
+    // Recargar los flechazos de la modal si está abierta
+    if (perfilSeleccionado && perfilSeleccionado.id === targetId) {
+      const { data: flechazos } = await supabase
+        .from('flechazos')
+        .select('emisor')
+        .eq('receptor', targetId)
+
+      let flechazosRecibidos: Flechazo[] = []
+      if (flechazos && flechazos.length > 0) {
+        const emisoresIds = flechazos.map(f => f.emisor)
+        const { data: emisores } = await supabase
+          .from('usuarios')
+          .select('id, alias, edad, foto_principal')
+          .in('id', emisoresIds)
+        
+        if (emisores) {
+          flechazosRecibidos = emisores.map(e => ({
+            id: e.id,
+            alias: e.alias,
+            edad: e.edad,
+            foto_url: e.foto_principal
+              ? (e.foto_principal.startsWith('http')
+                  ? e.foto_principal
+                  : supabase.storage.from('fotos').getPublicUrl(e.foto_principal).data.publicUrl)
+              : null,
+          }))
+        }
+      }
+
+      setPerfilSeleccionado(prev => prev ? { ...prev, flechazosRecibidos } : prev)
+    }
+
     const { data: mutuo } = await supabase.from('flechazos').select('id').eq('emisor', targetId).eq('receptor', uid).single()
     if (mutuo) {
       const u1 = uid < targetId ? uid : targetId
@@ -393,7 +466,7 @@ export default function ExplorarPage() {
                       const enviado = flechazosEnviados.has(u.id)
                       const esDestacado = idx === 0 && carruselIdx === 0
                       return (
-                        <div key={u.id} style={{ borderRadius:14, overflow:'hidden', position:'relative', background:'#1a0f2e', boxShadow: esDestacado ? '0 0 18px rgba(239,68,68,0.55), 0 0 4px rgba(239,68,68,0.8) inset' : '0 4px 12px rgba(0,0,0,0.3)', border: esDestacado ? '1px solid rgba(239,68,68,0.7)' : '1px solid rgba(212,175,55,0.18)', cursor:'pointer' }} onClick={() => router.push(`/perfil/${u.id}`)}>
+                        <div key={u.id} style={{ borderRadius:14, overflow:'hidden', position:'relative', background:'#1a0f2e', boxShadow: esDestacado ? '0 0 18px rgba(239,68,68,0.55), 0 0 4px rgba(239,68,68,0.8) inset' : '0 4px 12px rgba(0,0,0,0.3)', border: esDestacado ? '1px solid rgba(239,68,68,0.7)' : '1px solid rgba(212,175,55,0.18)', cursor:'pointer' }} onClick={() => abrirPerfil(u)}>
                           <div style={{ position:'relative', aspectRatio:'3/3.6', background:'linear-gradient(160deg,#2A1840,#af2245)' }}>
                             {u.foto_url
                               ? <img src={u.foto_url} alt={u.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
@@ -461,7 +534,7 @@ export default function ExplorarPage() {
               ) : (
                 <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
                   {conectados.map(u => (
-                    <div key={u.id} style={{ display:'flex', alignItems:'center', gap:11, cursor:'pointer' }} onClick={() => router.push(`/perfil/${u.id}`)}>
+                    <div key={u.id} style={{ display:'flex', alignItems:'center', gap:11, cursor:'pointer' }} onClick={() => abrirPerfil(u)}>
                       <div style={{ position:'relative', flexShrink:0 }}>
                         <div style={{ width:46, height:46, borderRadius:'50%', overflow:'hidden', background:'linear-gradient(135deg,#2A1840,#af2245)', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.4)' }}>
                           {u.foto_url
@@ -489,7 +562,7 @@ export default function ExplorarPage() {
                 <>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
                     {visitantes.slice(0, 9).map(u => (
-                      <div key={u.id} style={{ aspectRatio:'1', borderRadius:10, overflow:'hidden', background:'linear-gradient(135deg,#2A1840,#af2245)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.35)', border:'1px solid rgba(212,175,55,0.15)' }} onClick={() => router.push(`/perfil/${u.id}`)}>
+                      <div key={u.id} style={{ aspectRatio:'1', borderRadius:10, overflow:'hidden', background:'linear-gradient(135deg,#2A1840,#af2245)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.35)', border:'1px solid rgba(212,175,55,0.15)' }} onClick={() => abrirPerfil(u)}>
                         {u.foto_url
                           ? <img src={u.foto_url} alt={u.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
                           : <IconUser size={22} />}
@@ -520,6 +593,81 @@ export default function ExplorarPage() {
           </button>
         ))}
       </div>
+
+      {/* MODAL PERFIL */}
+      {perfilSeleccionado && (
+        <>
+          <div onClick={cerrarPerfil} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.7)', zIndex:100, backdropFilter:'blur(4px)' }} />
+          <div style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%, -50%)', zIndex:101, maxWidth:500, maxHeight:'90vh', overflowY:'auto', background:'linear-gradient(180deg,#1a0f2e 0%,#241638 100%)', borderRadius:20, border:'1px solid rgba(212,175,55,0.22)', boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
+            {/* Header modal */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:18, borderBottom:'1px solid rgba(212,175,55,0.1)', position:'sticky', top:0, background:'rgba(26,15,46,0.9)', zIndex:102 }}>
+              <h2 style={{ margin:0, color:'white', fontSize:16, fontWeight:700 }}>{perfilSeleccionado.alias}</h2>
+              <button onClick={cerrarPerfil} style={{ background:'none', border:'none', cursor:'pointer', color:'#d4af37', display:'flex', alignItems:'center' }}>
+                <IconClose />
+              </button>
+            </div>
+
+            <div style={{ padding:18 }}>
+              {/* Foto */}
+              <div style={{ borderRadius:16, overflow:'hidden', aspectRatio:'3/4', background:'linear-gradient(160deg,#2A1840,#af2245)', marginBottom:16, border:'1px solid rgba(212,175,55,0.22)' }}>
+                {perfilSeleccionado.foto_url
+                  ? <img src={perfilSeleccionado.foto_url} alt={perfilSeleccionado.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                  : <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.3)' }}><IconUser size={60} /></div>
+                }
+              </div>
+
+              {/* Info básica */}
+              <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(212,175,55,0.22)', borderRadius:14, padding:14, marginBottom:16 }}>
+                <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:8 }}>
+                  <span style={{ fontSize:24, fontWeight:800, color:'white' }}>{perfilSeleccionado.alias}</span>
+                  <span style={{ fontSize:18, fontWeight:600, color:'rgba(255,255,255,0.7)' }}>{perfilSeleccionado.edad}</span>
+                </div>
+                <div style={{ fontSize:12, color:'rgba(255,255,255,0.7)', marginBottom:12 }}>{perfilSeleccionado.ciudad}</div>
+                {perfilSeleccionado.bio && (
+                  <p style={{ fontSize:12, color:'rgba(255,255,255,0.85)', fontStyle:'italic', margin:0, marginBottom:10, lineHeight:1.5 }}>"{perfilSeleccionado.bio}"</p>
+                )}
+                <div style={{ fontSize:11, color:'#d4af37', fontWeight:600, background:'rgba(212,175,55,0.12)', padding:'5px 10px', borderRadius:6, display:'inline-block' }}>
+                  {perfilSeleccionado.busca}
+                </div>
+              </div>
+
+              {/* Botones acción */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 }}>
+                <button onClick={() => darFlechazo(perfilSeleccionado.id)}
+                  disabled={flechazosEnviados.has(perfilSeleccionado.id)}
+                  style={{ padding:'12px 0', borderRadius:14, border:'none', background: flechazosEnviados.has(perfilSeleccionado.id) ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#af2245,#f07855)', color: flechazosEnviados.has(perfilSeleccionado.id) ? 'rgba(255,255,255,0.5)' : 'white', fontSize:12, fontWeight:700, cursor: flechazosEnviados.has(perfilSeleccionado.id) ? 'default' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                  <IconHeart filled={flechazosEnviados.has(perfilSeleccionado.id)} /> {flechazosEnviados.has(perfilSeleccionado.id) ? 'Enviado' : 'Flechazo'}
+                </button>
+                <button onClick={() => router.push('/mensajes')}
+                  style={{ padding:'12px 0', borderRadius:14, border:'1px solid rgba(212,175,55,0.4)', background:'transparent', color:'#d4af37', fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                  <IconMessage /> Mensaje
+                </button>
+              </div>
+
+              {/* Flechazos recibidos */}
+              {perfilSeleccionado.flechazosRecibidos.length > 0 && (
+                <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(212,175,55,0.22)', borderRadius:14, padding:14 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:'white', marginBottom:12 }}>
+                    ❤️ Flechazos recibidos ({perfilSeleccionado.flechazosRecibidos.length})
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
+                    {perfilSeleccionado.flechazosRecibidos.map(f => (
+                      <div key={f.id} style={{ borderRadius:10, overflow:'hidden', aspectRatio:'1', background:'linear-gradient(135deg,#2A1840,#af2245)', border:'1px solid rgba(212,175,55,0.18)', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.35)' }}>
+                        {f.foto_url
+                          ? <img src={f.foto_url} alt={f.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                          : <IconUser size={16} />}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.5)', marginTop:10, textAlign:'center' }}>
+                    {perfilSeleccionado.flechazosRecibidos.map(f => f.alias).join(', ')}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
