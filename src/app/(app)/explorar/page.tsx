@@ -95,7 +95,11 @@ export default function ExplorarPage() {
       ...u,
       online: Math.random() > 0.4,
       status: statuses[i % statuses.length],
-      foto_url: u.foto_principal ? supabase.storage.from('fotos').getPublicUrl(u.foto_principal).data.publicUrl : null,
+      foto_url: u.foto_principal
+        ? (u.foto_principal.startsWith('http')
+            ? u.foto_principal
+            : supabase.storage.from('fotos').getPublicUrl(u.foto_principal).data.publicUrl)
+        : null,
     }))
     setPerfiles(mapped)
     setConectados(mapped.filter(u => u.online).slice(0, 6))
