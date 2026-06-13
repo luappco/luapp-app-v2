@@ -87,7 +87,7 @@ export default function ExplorarPage() {
   const [modalNotificaciones, setModalNotificaciones] = useState(false)
   const [modalFavoritos, setModalFavoritos] = useState(false)
 
-  const [flechazosRecibidos, setFlechazosRecibidos] = useState<Usuario[]>([])
+  const [flechazosRecibidos, setFlechazosRecibidos] = useState<any>([])
   const [notificacionesCount, setNotificacionesCount] = useState(0)
 
   useEffect(() => { init() }, [])
@@ -150,7 +150,7 @@ export default function ExplorarPage() {
     const { data } = await supabase.from('flechazos').select('receptor').eq('emisor', userId)
     if (data) {
       const receptorIds = data.map(f => f.receptor)
-      const { data: users } = await supabase.from('usuarios').select('id, alias, edad, ciudad, foto_principal').in('id', receptorIds)
+      const { data: users } = await supabase.from('usuarios').select('id, alias, edad, ciudad, busca, bio, foto_principal').in('id', receptorIds)
       if (users) {
         const mapped = users.map(u => ({
           ...u,
