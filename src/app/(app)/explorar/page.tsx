@@ -1,4 +1,4 @@
-'use client'
+ 'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -771,7 +771,7 @@ export default function ExplorarPage() {
             </div>
           ) : (
             <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:12 }}>
-              {flechazosRecibidos.map(u => (
+              {flechazosRecibidos.map((u: any) => (
                 <div key={u.id} style={{ borderRadius:12, overflow:'hidden', cursor:'pointer', border:'1px solid rgba(212,175,55,0.22)' }} onClick={() => { setModalFavoritos(false); abrirPerfil(u as Usuario) }}>
                   <div style={{ aspectRatio:'1', background:'linear-gradient(135deg,#2A1840,#af2245)', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.3)', overflow:'hidden' }}>
                     {u.foto_url
