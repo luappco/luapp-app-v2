@@ -1,4 +1,4 @@
- 'use client'
+'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -23,7 +23,9 @@ export default function ExplorarPage() {
   const router = useRouter()
   const supabase = createClient()
   const scrollRef = useRef<HTMLDivElement>(null)
-  const [windowWidth, setWindowWidth] = useState(0)
+  
+  const [windowWidth, setWindowWidth] = useState(1024)
+  const [mounted, setMounted] = useState(false)
 
   const [miPerfil, setMiPerfil] = useState<MiPerfil | null>(null)
   const [userId, setUserId] = useState('')
@@ -38,9 +40,10 @@ export default function ExplorarPage() {
   const [enviando, setEnviando] = useState(false)
   const [mostradorEmojis, setMostradorEmojis] = useState(false)
 
-  const isMobile = windowWidth < 768
+  const isMobile = mounted && windowWidth < 768
 
   useEffect(() => {
+    setMounted(true)
     setWindowWidth(window.innerWidth)
     const handleResize = () => setWindowWidth(window.innerWidth)
     window.addEventListener('resize', handleResize)
@@ -164,6 +167,8 @@ export default function ExplorarPage() {
     </div>
   )
 
+  if (!mounted) return null
+
   const chatActivo = chats.find(c => c.id === chatAbierto)
 
   return (
@@ -174,9 +179,6 @@ export default function ExplorarPage() {
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05) }
         ::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); border-radius: 3px }
         ::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.5) }
-        @media (max-width: 768px) {
-          body { overflow: hidden }
-        }
       `}</style>
 
       {/* TOP BAR */}
@@ -219,9 +221,9 @@ export default function ExplorarPage() {
       </div>
 
       {/* CONTENIDO PRINCIPAL */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', gap: 0 }}>
         
-        {/* EXPLORAR (OCULTO EN MÓVIL SI HAY CHAT ABIERTO) */}
+        {/* EXPLORAR */}
         {!isMobile || !chatAbierto ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: isMobile ? 20 : 40, background: 'rgba(255,255,255,0.02)' }}>
             <p style={{ fontSize: isMobile ? 12 : 13, color: 'rgba(255,255,255,0.5)', margin: 0, textAlign: 'center' }}>Explorar perfiles aquí</p>
@@ -229,7 +231,7 @@ export default function ExplorarPage() {
           </div>
         ) : null}
 
-        {/* PANEL CHAT (FULL SCREEN EN MÓVIL) */}
+        {/* PANEL CHAT */}
         {chatAbierto && (
           <div style={{ display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg,rgba(26,15,46,0.9) 0%,rgba(36,22,56,0.9) 100%)', flex: 1, overflow: 'hidden' }}>
             
@@ -291,7 +293,7 @@ export default function ExplorarPage() {
 
         {/* SIDEBAR CHATS (DESKTOP ONLY) */}
         {!isMobile && !chatAbierto && (
-          <div style={{ background: 'rgba(255,255,255,0.02)', borderLeft: '1px solid rgba(212,175,55,0.22)', display: 'flex', flexDirection: 'column', width: 380, height: '100%' }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', borderLeft: '1px solid rgba(212,175,55,0.22)', display: 'flex', flexDirection: 'column', width: 380, height: '100%', overflow: 'hidden' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(212,175,55,0.1)' }}>
               <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'white' }}>Mensajes</h3>
             </div>
@@ -302,13 +304,13 @@ export default function ExplorarPage() {
                 </div>
               ) : (
                 chats.map(chat => (
-                  <button key={chat.id} onClick={() => setChatAbierto(chat.id)} style={{ width: '100%', padding: '12px 18px', border: 'none', background: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(212,175,55,0.05)', display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'} onMouseLeave={(e) => e.currentTarget.style.background = 'none'}>
+                  <button key={chat.id} onClick={() => setChatAbierto(chat.id)} style={{ width: '100%', padding: '12px 18px', border: 'none', background: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(212,175,55,0.05)', display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.2s', textAlign: 'left' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'} onMouseLeave={(e) => e.currentTarget.style.background = 'none'}>
                     <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#2A1840,#af2245)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                       {chat.foto_url ? <img src={chat.foto_url} alt={chat.alias} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <IconUser size={18} />}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{chat.alias}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Haz clic para chatear</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Click para chatear</div>
                     </div>
                   </button>
                 ))
@@ -317,11 +319,11 @@ export default function ExplorarPage() {
           </div>
         )}
 
-        {/* SIDEBAR CHATS (MÓVIL - MODAL STYLE) */}
+        {/* SIDEBAR CHATS (MÓVIL) */}
         {isMobile && !chatAbierto && (
-          <div style={{ background: 'rgba(255,255,255,0.02)', borderLeft: '1px solid rgba(212,175,55,0.22)', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 280, height: '100%' }}>
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(212,175,55,0.1)' }}>
-              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'white' }}>Chats</h3>
+          <div style={{ background: 'rgba(255,255,255,0.02)', borderLeft: '1px solid rgba(212,175,55,0.22)', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: 280, height: '100%', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 14px', borderBottom: '1px solid rgba(212,175,55,0.1)' }}>
+              <h3 style={{ margin: 0, fontSize: 12, fontWeight: 700, color: 'white' }}>Chats</h3>
             </div>
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {chats.length === 0 ? (
@@ -330,11 +332,11 @@ export default function ExplorarPage() {
                 </div>
               ) : (
                 chats.map(chat => (
-                  <button key={chat.id} onClick={() => setChatAbierto(chat.id)} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(212,175,55,0.05)', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'} onMouseLeave={(e) => e.currentTarget.style.background = 'none'}>
+                  <button key={chat.id} onClick={() => setChatAbierto(chat.id)} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(212,175,55,0.05)', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s', textAlign: 'left' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'} onMouseLeave={(e) => e.currentTarget.style.background = 'none'}>
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#2A1840,#af2245)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                       {chat.foto_url ? <img src={chat.foto_url} alt={chat.alias} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <IconUser size={16} />}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{chat.alias}</div>
                       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Click chat</div>
                     </div>
