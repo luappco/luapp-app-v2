@@ -1,4 +1,4 @@
-'use client'
+ 'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -34,7 +34,7 @@ const CIUDADES: Record<string, string[]> = {
 }
 
 interface Usuario { id:string; alias:string; edad:number; ciudad:string; busca:string; foto_principal?:string; online?:boolean; foto_url?:string | null; bio?:string } 
-interface MiPerfil { alias:string; ciudad:string; creditos:number }
+interface MiPerfil { alias:string; ciudad:string; creditos:number; genero:string }
 
 const LOGO = 'https://luapp.co/images/logo/logo-color.webp'
 
@@ -64,14 +64,17 @@ export default function ExplorarPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
     setUserId(user.id)
-    const { data: p } = await supabase.from('usuarios').select('alias,ciudad,creditos').eq('id', user.id).single()
-    if (p) setMiPerfil({ alias: p.alias, ciudad: p.ciudad, creditos: p.creditos || 0 })
-    await cargarPerfiles(user.id)
+    const { data: p } = await supabase.from('usuarios').select('alias,ciudad,creditos,genero').eq('id', user.id).single()
+    if (p) setMiPerfil({ alias: p.alias, ciudad: p.ciudad, creditos: p.creditos || 0, genero: p.genero })
+    await cargarPerfiles(user.id, p?.genero)
     setCargando(false)
   }
 
-  const cargarPerfiles = async (uid: string) => {
-    const { data } = await supabase.from('usuarios').select('id,alias,edad,ciudad,busca,foto_principal,bio').neq('id', uid).limit(20)
+  const cargarPerfiles = async (uid: string, miGenero: string) => {
+    // Filtrar por género OPUESTO
+    const generoOpuesto = miGenero?.toLowerCase() === 'hombre' ? 'mujer' : 'hombre'
+    
+    const { data } = await supabase.from('usuarios').select('id,alias,edad,ciudad,busca,foto_principal,bio,genero').neq('id', uid).eq('genero', generoOpuesto).limit(20)
     if (!data) return
     const mapped = data.map(u => ({
       ...u,
@@ -90,15 +93,15 @@ export default function ExplorarPage() {
     if (!user) return
     const { data: c } = await supabase.from('usuarios').select('creditos').eq('id', user.id).single()
     if (!c || c.creditos < 1) { router.push('/creditos'); return }
-    await supabase.from('flechazos').insert({ emisor: user.id, receptor: targetId })
+    await supabase.from('flechazos').insert({ de_usuario: user.id, a_usuario: targetId })
     await supabase.rpc('sumar_creditos', { uid: user.id, monto: -1 })
     setFlechazosEnviados(prev => new Set([...prev, targetId]))
     setMiPerfil(prev => prev ? { ...prev, creditos: prev.creditos - 1 } : prev)
-    const { data: mutuo } = await supabase.from('flechazos').select('id').eq('emisor', targetId).eq('receptor', user.id).single()
+    const { data: mutuo } = await supabase.from('flechazos').select('id').eq('de_usuario', targetId).eq('a_usuario', user.id).single()
     if (mutuo) {
       const u1 = user.id < targetId ? user.id : targetId
       const u2 = user.id < targetId ? targetId : user.id
-      await supabase.from('matches').upsert({ usuario1: u1, usuario2: u2 })
+      await supabase.from('matches').insert({ usuario1: u1, usuario2: u2 })
     }
   }
 
@@ -186,49 +189,23 @@ export default function ExplorarPage() {
           <IconSearch /> Búsqueda
         </div>
         <div style={{ position:'relative', marginBottom:8 }}>
-          <button onClick={() => setCiudadOpen(!ciudadOpen)}
-            style={{ width:'100%', padding:'7px 10px', borderRadius:8, textAlign:'left', border:'0.5px solid #e0bec1', background:'white', fontSize:12, color: ciudadFiltro ? '#2A1840' : '#9ca3af', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer' }}>
-            {ciudadFiltro || 'Ciudad...'} <IconChevronDown />
+          <button style={{ width:'100%', padding:'7px 10px', borderRadius:8, textAlign:'left', border:'0.5px solid #e0bec1', background:'white', fontSize:12, color:'#9ca3af', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer' }}>
+            {miPerfil?.genero?.toLowerCase() === 'hombre' ? '👩 Buscando: Mujeres' : '👨 Buscando: Hombres'} <IconChevronDown />
           </button>
-          {ciudadOpen && (
-            <div style={{ position:'absolute', top:'110%', left:0, right:0, zIndex:50, background:'white', border:'0.5px solid #e0bec1', borderRadius:10, maxHeight:200, overflowY:'auto', boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}>
-              <button onClick={() => { setCiudadFiltro(''); setCiudadOpen(false) }}
-                style={{ width:'100%', textAlign:'left', padding:'7px 12px', fontSize:11, color:'#9ca3af', background:'none', border:'none', cursor:'pointer' }}>
-                Todas las ciudades
-              </button>
-              {Object.entries(CIUDADES).map(([region, cities]) => (
-                <div key={region}>
-                  <div style={{ padding:'5px 12px', fontSize:10, fontWeight:600, background:'#f9f5f0', color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.05em' }}>{region}</div>
-                  {cities.map(c => (
-                    <button key={c} onClick={() => { setCiudadFiltro(c); setCiudadOpen(false) }}
-                      style={{ width:'100%', textAlign:'left', padding:'6px 16px', fontSize:12, background: ciudadFiltro === c ? '#fff0f3' : 'none', color: ciudadFiltro === c ? '#af2245' : '#374151', border:'none', cursor:'pointer' }}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
         </div>
         <div style={{ marginBottom:8 }}>
           <div style={{ fontSize:11, color:'#9ca3af', marginBottom:4 }}>Edad: 18 – {edadMax} años</div>
           <input type="range" min={18} max={80} value={edadMax} onChange={e => setEdadMax(Number(e.target.value))} style={{ width:'100%' }} />
         </div>
         <select value={busca} onChange={e => setBusca(e.target.value)}
-          style={{ width:'100%', padding:'7px 10px', borderRadius:8, fontSize:12, border:'0.5px solid #e0bec1', background:'white', marginBottom:8, color: busca ? '#2A1840' : '#9ca3af' }}>
+          style={{ width:'100%', padding:'7px 10px', borderRadius:8, fontSize:12, border:'0.5px solid #e0bec1', background:'white', marginBottom:10, color: busca ? '#2A1840' : '#9ca3af' }}>
           <option value="">¿Qué busca?</option>
           <option>Aventura discreta</option>
           <option>Amistad especial</option>
           <option>Sin compromiso</option>
           <option>Relación seria</option>
         </select>
-        <select style={{ width:'100%', padding:'7px 10px', borderRadius:8, fontSize:12, border:'0.5px solid #e0bec1', background:'white', marginBottom:10, color:'#2A1840' }}>
-          <option>Dentro de 10 km</option>
-          <option>Dentro de 25 km</option>
-          <option>Dentro de 50 km</option>
-          <option>Todo el país</option>
-        </select>
-        <button onClick={() => { cargarPerfiles(userId); setSidebarOpen(false) }}
+        <button onClick={() => { cargarPerfiles(userId, miPerfil?.genero || ''); setSidebarOpen(false) }}
           style={{ width:'100%', padding:'9px 0', borderRadius:20, border:'none', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', fontSize:12, fontWeight:600, cursor:'pointer', boxShadow:'0 4px 12px rgba(175,34,69,0.25)' }}>
           Buscar perfiles
         </button>
@@ -317,7 +294,6 @@ export default function ExplorarPage() {
       {perfilSeleccionado && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:100, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
           <div style={{ background:'white', borderRadius:16, width:'100%', maxWidth:400, maxHeight:'90vh', overflowY:'auto' }}>
-            {/* Foto */}
             <div style={{ position:'relative', height:300, background:'linear-gradient(160deg,#2A1840,#af2245)', display:'flex', alignItems:'center', justifyContent:'center' }}>
               {perfilSeleccionado.foto_url
                 ? <img src={perfilSeleccionado.foto_url} alt={perfilSeleccionado.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
@@ -328,24 +304,20 @@ export default function ExplorarPage() {
               </button>
             </div>
 
-            {/* Información */}
             <div style={{ padding:20 }}>
               <div style={{ fontSize:24, fontWeight:700, color:'#1f2937', marginBottom:4 }}>{perfilSeleccionado.alias}, {perfilSeleccionado.edad}</div>
               <div style={{ fontSize:14, color:'#9ca3af', marginBottom:16 }}>📍 {perfilSeleccionado.ciudad}</div>
 
-              {/* Bio */}
               <div style={{ marginBottom:16, padding:12, background:'#f9f5f0', borderRadius:10 }}>
                 <div style={{ fontSize:12, fontWeight:600, color:'#6b7280', marginBottom:6 }}>Acerca de</div>
                 <div style={{ fontSize:13, color:'#1f2937', lineHeight:'1.6' }}>{perfilSeleccionado.bio || 'Sin descripción'}</div>
               </div>
 
-              {/* Búsqueda */}
               <div style={{ marginBottom:20, padding:12, background:'#fff0f3', borderRadius:10 }}>
                 <div style={{ fontSize:12, fontWeight:600, color:'#af2245', marginBottom:6 }}>¿Qué busca?</div>
                 <div style={{ fontSize:13, color:'#1f2937' }}>{perfilSeleccionado.busca || 'No especificado'}</div>
               </div>
 
-              {/* Botones */}
               <div style={{ display:'flex', gap:10 }}>
                 <button onClick={() => { darFlechazo(perfilSeleccionado.id); setPerfilSeleccionado(null) }}
                   style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
