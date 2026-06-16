@@ -26,7 +26,7 @@ export default function PerfilEditarPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  const [usuario, setUsuario] = useState<any>(null)
+  const [usuarioId, setUsuarioId] = useState('')
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState('')
@@ -40,38 +40,76 @@ export default function PerfilEditarPage() {
   useEffect(() => { cargar() }, [])
 
   const cargar = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user) { router.push('/login'); return }
-    const { data: u } = await supabase.from('usuarios').select('*').eq('id', session.user.id).single()
-    if (u) {
-      setUsuario(u)
-      setAlias(u.alias || '')
-      setBio(u.bio || '')
-      setEdad(u.edad || 18)
-      setCiudad(u.ciudad || '')
-      setBusca(u.busca || '')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) { 
+        router.push('/login')
+        return 
+      }
+      
+      setUsuarioId(session.user.id)
+      
+      const { data: u, error } = await supabase.from('usuarios').select('*').eq('id', session.user.id).single()
+      
+      if (error) {
+        console.error('Error cargando usuario:', error)
+        setMensaje('❌ Error cargando perfil')
+        return
+      }
+      
+      if (u) {
+        setAlias(u.alias || '')
+        setBio(u.bio || '')
+        setEdad(u.edad || 18)
+        setCiudad(u.ciudad || '')
+        setBusca(u.busca || '')
+      }
+      setCargando(false)
+    } catch (err) {
+      console.error('Error en cargar:', err)
+      setMensaje('❌ Error cargando perfil')
     }
-    setCargando(false)
   }
 
   const guardar = async () => {
-    if (!usuario) return
-    setGuardando(true)
-    try {
-      await supabase.from('usuarios').update({
-        alias,
-        bio,
-        edad,
-        ciudad,
-        busca,
-      }).eq('id', usuario.id)
-      setMensaje('✅ Perfil actualizado correctamente.')
-      setTimeout(() => router.push('/perfil'), 1500)
-    } catch (err) {
-      console.error('Error:', err)
-      setMensaje('❌ Error al guardar perfil')
+    if (!usuarioId) {
+      setMensaje('❌ Error: usuario no identificado')
+      return
     }
-    setGuardando(false)
+    
+    if (!alias.trim()) {
+      setMensaje('❌ El alias no puede estar vacío')
+      return
+    }
+
+    setGuardando(true)
+    setMensaje('')
+
+    try {
+      const { error } = await supabase.from('usuarios').update({
+        alias: alias.trim(),
+        bio: bio.trim(),
+        edad: Number(edad),
+        ciudad: ciudad.trim(),
+        busca: busca.trim(),
+      }).eq('id', usuarioId)
+
+      if (error) {
+        console.error('Error guardando:', error)
+        setMensaje(`❌ Error: ${error.message}`)
+        setGuardando(false)
+        return
+      }
+
+      setMensaje('✅ Perfil actualizado correctamente')
+      setTimeout(() => {
+        router.push('/perfil')
+      }, 1000)
+    } catch (err) {
+      console.error('Error catch:', err)
+      setMensaje('❌ Error al guardar perfil')
+      setGuardando(false)
+    }
   }
 
   if (cargando) return (
@@ -165,7 +203,7 @@ export default function PerfilEditarPage() {
         {/* Botón guardar grande */}
         <button onClick={guardar} disabled={guardando}
           style={{ width:'100%', padding:'14px 0', borderRadius:12, border:'none', background: guardando ? '#e0bec1' : 'linear-gradient(135deg,#af2245,#f07855)', color:'white', fontSize:14, fontWeight:700, cursor: guardando ? 'not-allowed' : 'pointer' }}>
-          {guardando ? 'Guardando cambios...' : '✅ Guardar cambios'}
+          {guardando ? '⏳ Guardando cambios...' : '✅ Guardar cambios'}
         </button>
       </div>
     </div>
