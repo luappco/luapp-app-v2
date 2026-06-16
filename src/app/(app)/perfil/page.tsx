@@ -43,7 +43,6 @@ export default function PerfilPage() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session?.user) { router.push('/login'); return }
     const uid = session.user.id
-    // Consultas en paralelo para carga rápida
     const [{ data }, _] = await Promise.all([
       supabase.from('usuarios').select('*').eq('id', uid).single(),
       cargarFotos(uid),
@@ -65,20 +64,25 @@ export default function PerfilPage() {
     if (!files || !usuario) return
     if (fotos.length + files.length > 6) { setMensaje('Máximo 6 fotos.'); return }
     setSubiendo(true)
-    for (const file of Array.from(files)) {
-      const ext = file.name.split('.').pop()
-      const path = `${usuario.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      await supabase.storage.from('fotos').upload(path, file, { contentType: file.type })
-    }
-    await cargarFotos(usuario.id)
-    const { data: fl } = await supabase.storage.from('fotos').list(usuario.id)
-    if (fl && fl.length > 0 && !usuario.foto_principal) {
-      const p = `${usuario.id}/${fl[0].name}`
-      await supabase.from('usuarios').update({ foto_principal: p }).eq('id', usuario.id)
-      setUsuario(prev => prev ? { ...prev, foto_principal: p } : prev)
+    try {
+      for (const file of Array.from(files)) {
+        const ext = file.name.split('.').pop()
+        const path = `${usuario.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+        await supabase.storage.from('fotos').upload(path, file, { contentType: file.type })
+      }
+      await cargarFotos(usuario.id)
+      const { data: fl } = await supabase.storage.from('fotos').list(usuario.id)
+      if (fl && fl.length > 0 && !usuario.foto_principal) {
+        const p = `${usuario.id}/${fl[0].name}`
+        await supabase.from('usuarios').update({ foto_principal: p }).eq('id', usuario.id)
+        setUsuario(prev => prev ? { ...prev, foto_principal: p } : prev)
+      }
+      setMensaje('✅ Fotos subidas correctamente.')
+    } catch (err) {
+      console.error('Error subiendo foto:', err)
+      setMensaje('❌ Error al subir foto')
     }
     setSubiendo(false)
-    setMensaje('Fotos subidas.')
     setTimeout(() => setMensaje(''), 3000)
   }
 
@@ -86,7 +90,7 @@ export default function PerfilPage() {
     if (!usuario) return
     await supabase.from('usuarios').update({ foto_principal: path }).eq('id', usuario.id)
     setUsuario(prev => prev ? { ...prev, foto_principal: path } : prev)
-    setMensaje('Foto principal actualizada.')
+    setMensaje('✅ Foto principal actualizada.')
     setTimeout(() => setMensaje(''), 3000)
   }
 
@@ -99,7 +103,7 @@ export default function PerfilPage() {
       setUsuario(prev => prev ? { ...prev, foto_principal: nueva || undefined } : prev)
     }
     await cargarFotos(usuario!.id)
-    setMensaje('Foto eliminada.')
+    setMensaje('✅ Foto eliminada.')
     setTimeout(() => setMensaje(''), 3000)
   }
 
@@ -112,9 +116,6 @@ export default function PerfilPage() {
   const cerrarSesion = async () => { await supabase.auth.signOut(); router.push('/login') }
 
   const fotoActual = fotoUrls[fotoIdx] || null
-  const fotoPrincipalUrl = usuario?.foto_principal
-    ? supabase.storage.from('fotos').getPublicUrl(usuario.foto_principal).data.publicUrl
-    : null
 
   if (cargando) return (
     <div style={{ minHeight:'100vh', background:'#fff8f1', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20 }}>
@@ -124,7 +125,7 @@ export default function PerfilPage() {
     </div>
   )
 
-  const S = { // shared styles
+  const S = {
     card: { background:'white', borderRadius:16, border:'0.5px solid #f0d4d8', padding:'16px 18px', marginBottom:12 } as React.CSSProperties,
     secTitle: { fontSize:12, fontWeight:700, color:'#af2245', textTransform:'uppercase' as const, letterSpacing:'0.06em', marginBottom:12, display:'flex', alignItems:'center', gap:6 },
     row: { display:'flex', justifyContent:'space-between', fontSize:12, padding:'5px 0', borderBottom:'0.5px solid #f9f5f0' } as React.CSSProperties,
@@ -137,7 +138,7 @@ export default function PerfilPage() {
     <div style={{ minHeight:'100vh', background:'#fff8f1', maxWidth:480, margin:'0 auto', paddingBottom:90 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} * {box-sizing:border-box}`}</style>
 
-      {/* ── Top bar ── */}
+      {/* Top bar */}
       <div style={{ background:'white', borderBottom:'0.5px solid #f0d4d8', padding:'10px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:30 }}>
         <img src={LOGO} alt="LUAPP" style={{ height:30, width:'auto' }} />
         <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'#6b7280' }}>
@@ -148,14 +149,14 @@ export default function PerfilPage() {
         </button>
       </div>
 
-      {/* ── Cabecera alias + online ── */}
+      {/* Cabecera */}
       <div style={{ padding:'16px 16px 0', display:'flex', alignItems:'center', gap:8 }}>
         <IconDot />
         <span style={{ fontSize:18, fontWeight:700, color:'#2A1840' }}>{usuario?.alias}</span>
         <span style={{ fontSize:11, color:'#22c55e', fontWeight:500 }}>En línea</span>
       </div>
 
-      {/* ── Foto principal con carrusel ── */}
+      {/* Foto principal con carrusel */}
       <div style={{ margin:'12px 16px 0', position:'relative', borderRadius:16, overflow:'hidden', background:'#1e1b17', aspectRatio:'4/3' }}>
         {fotoActual ? (
           <img src={fotoActual} alt="foto" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
@@ -196,11 +197,11 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      {/* ── Acciones rápidas ── */}
+      {/* Acciones rápidas */}
       <div style={{ margin:'10px 16px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
         <button onClick={() => inputRef.current?.click()}
           style={{ padding:'10px 0', borderRadius:12, border:'none', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-          <IconCamera /> Subir foto
+          <IconCamera /> {subiendo ? 'Subiendo...' : 'Subir foto'}
         </button>
         <button onClick={() => router.push('/explorar')}
           style={{ padding:'10px 0', borderRadius:12, border:'0.5px solid #e0bec1', background:'white', color:'#af2245', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
@@ -217,16 +218,16 @@ export default function PerfilPage() {
 
       <div style={{ padding:'0 16px' }}>
 
-        {/* ── Frase de presentación ── */}
+        {/* Frase de presentación */}
         <div style={S.card}>
           <div style={S.secTitle}><IconMsg /> Frase de presentación</div>
           <p style={{ fontSize:13, color:'#4b5563', fontStyle:'italic', margin:'0 0 10px' }}>
             "{(usuario as any)?.bio || 'Agrega una frase que te describa...'}"
           </p>
-          <button style={S.modBtn}><IconEdit /> Modificar</button>
+          <button onClick={() => router.push('/perfil/editar')} style={S.modBtn}><IconEdit /> Modificar</button>
         </div>
 
-        {/* ── Datos personales ── */}
+        {/* Datos personales */}
         <div style={S.card}>
           <div style={S.secTitle}><IconUser /> Datos personales</div>
           {[
@@ -241,10 +242,10 @@ export default function PerfilPage() {
               <span style={S.val}>{val || '—'}</span>
             </div>
           ))}
-          <button style={S.modBtn}><IconEdit /> Modificar</button>
+          <button onClick={() => router.push('/perfil/editar')} style={S.modBtn}><IconEdit /> Modificar</button>
         </div>
 
-        {/* ── Fotos / Book ── */}
+        {/* Fotos / Book */}
         <div style={S.card}>
           <div style={{ display:'flex', gap:8, marginBottom:12 }}>
             {(['publico','privado'] as const).map(t => (
@@ -295,12 +296,6 @@ export default function PerfilPage() {
                   </button>
                 )}
               </div>
-              {fotos.length < 6 && (
-                <button onClick={() => inputRef.current?.click()}
-                  style={{ width:'100%', marginTop:10, padding:'8px 0', borderRadius:20, border:'0.5px solid #af2245', background:'none', color:'#af2245', fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-                  <IconPlus /> Añadir una foto
-                </button>
-              )}
             </>
           ) : (
             <div style={{ textAlign:'center', padding:'24px 0', color:'#9ca3af' }}>
@@ -316,7 +311,7 @@ export default function PerfilPage() {
           )}
         </div>
 
-        {/* ── Configuración ── */}
+        {/* Configuración */}
         <div style={S.card}>
           <div style={S.secTitle}><IconShield /> Configuración</div>
 
@@ -344,18 +339,9 @@ export default function PerfilPage() {
               <IconChevR />
             </div>
           </button>
-
-          {/* Editar perfil */}
-          <button style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', background:'none', border:'none', cursor:'pointer' }}>
-            <div style={{ textAlign:'left' }}>
-              <div style={{ fontSize:13, fontWeight:600, color:'#2A1840' }}>Editar perfil</div>
-              <div style={{ fontSize:11, color:'#9ca3af' }}>Bio, ciudad, intereses</div>
-            </div>
-            <IconChevR />
-          </button>
         </div>
 
-        {/* ── Cerrar sesión ── */}
+        {/* Cerrar sesión */}
         <button onClick={cerrarSesion}
           style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:14, background:'white', borderRadius:16, border:'0.5px solid #fecaca', cursor:'pointer', marginBottom:16 }}>
           <div style={{ width:32, height:32, borderRadius:10, background:'#fef2f2', display:'flex', alignItems:'center', justifyContent:'center', color:'#ef4444' }}>
@@ -365,7 +351,7 @@ export default function PerfilPage() {
         </button>
       </div>
 
-      {/* ── Bottom Nav ── */}
+      {/* Bottom Nav */}
       <div style={{ position:'fixed', bottom:0, left:'50%', transform:'translateX(-50%)', width:'100%', maxWidth:480, background:'white', borderTop:'0.5px solid #f0d4d8', display:'flex', zIndex:40, padding:'8px 0' }}>
         {[
           { icon:<IconSearch />, path:'/explorar', label:'Explorar', active:false },
