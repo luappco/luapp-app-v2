@@ -1,24 +1,42 @@
- 'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
+const IconSearch = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+const IconHeart = ({ filled }: { filled?: boolean }) => <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? '#af2245' : 'none'} stroke={filled ? '#af2245' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+const IconMail = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+const IconStar = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+const IconEye = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+const IconBell = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+const IconLogout = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+const IconFlame = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+const IconUser = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+const IconMessage = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+const IconCrown = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f07855" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg>
+const IconUsers = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#af2245" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+const IconChevronDown = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+const IconMenu = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+const IconX = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+
+const CIUDADES: Record<string, string[]> = {
+  '🇨🇴 Colombia': ['Bogotá','Medellín','Cali','Barranquilla','Cartagena','Bucaramanga','Pereira','Santa Marta'],
+  '🇲🇽 México': ['Ciudad de México','Guadalajara','Monterrey','Cancún','Puebla','Tijuana'],
+  '🇨🇦 Centroamérica': ['Ciudad de Guatemala','San José (CR)','Panamá','Santo Domingo'],
+  '🇦🇷 Argentina': ['Buenos Aires','Córdoba','Rosario','Mendoza','La Plata'],
+  '🇨🇱 Chile': ['Santiago','Valparaíso','Concepción'],
+  '🇵🇪 Perú': ['Lima','Arequipa','Cusco'],
+  '🇧🇷 Brasil': ['São Paulo','Río de Janeiro','Brasília'],
+  '🇪🇸 España': ['Madrid','Barcelona','Valencia','Sevilla','Bilbao'],
+  '🇵🇹 Portugal': ['Lisboa','Oporto'],
+  '🇫🇷 Francia': ['París','Lyon','Marsella'],
+}
+
+interface Usuario { id:string; alias:string; edad:number; ciudad:string; busca:string; foto_principal?:string; online?:boolean; foto_url?:string | null } 
+interface MiPerfil { alias:string; ciudad:string; creditos:number }
+
 const LOGO = 'https://luapp.co/images/logo/logo-color.webp'
-
-const IconMail = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-const IconStar = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-const IconEye = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-const IconBell = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-const IconLogout = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-const IconHeart = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#af2245" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-const IconX = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-const IconChevRight = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-const IconChevLeft = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-const IconUser = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-
-interface Usuario { id: string; alias: string; edad: number; ciudad: string; bio?: string; foto_principal?: string }
-interface MiPerfil { id: string; alias: string; creditos: number }
 
 export default function ExplorarPage() {
   const router = useRouter()
@@ -26,239 +44,333 @@ export default function ExplorarPage() {
 
   const [miPerfil, setMiPerfil] = useState<MiPerfil | null>(null)
   const [userId, setUserId] = useState('')
-  const [cargando, setCargando] = useState(true)
-
-  const [perfiles, setPerfiles] = useState<Usuario[]>([])
-  const [idxCarrusel, setIdxCarrusel] = useState(0)
-  const [filtroEdadMin, setFiltroEdadMin] = useState(18)
-  const [filtroEdadMax, setFiltroEdadMax] = useState(60)
-  const [filtroCiudad, setFiltroCiudad] = useState('')
+  const [miembrosDelDia, setMiembrosDelDia] = useState<Usuario[]>([])
+  const [nuevos, setNuevos] = useState<Usuario[]>([])
   const [conectados, setConectados] = useState<Usuario[]>([])
   const [visitantes, setVisitantes] = useState<Usuario[]>([])
-  const [stats, setStats] = useState({ visitas: 0, flechazos: 0, matches: 0 })
+  const [cargando, setCargando] = useState(true)
+  const [flechazosEnviados, setFlechazosEnviados] = useState<Set<string>>(new Set())
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const [edadMax, setEdadMax] = useState(60)
+  const [ciudadFiltro, setCiudadFiltro] = useState('')
+  const [ciudadOpen, setCiudadOpen] = useState(false)
+  const [busca, setBusca] = useState('')
 
   useEffect(() => { init() }, [])
 
   const init = async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user) { router.push('/login'); return }
-    const uid = session.user.id
-    setUserId(uid)
-
-    const { data: p } = await supabase.from('usuarios').select('id, alias, creditos').eq('id', uid).single()
-    if (p) setMiPerfil({ id: p.id, alias: p.alias, creditos: p.creditos || 0 })
-
-    cargarPerfiles(uid)
-    cargarStats(uid)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { router.push('/login'); return }
+    setUserId(user.id)
+    const { data: p } = await supabase.from('usuarios').select('alias,ciudad,creditos').eq('id', user.id).single()
+    if (p) setMiPerfil({ alias: p.alias, ciudad: p.ciudad, creditos: p.creditos || 0 })
+    await cargarPerfiles(user.id)
     setCargando(false)
   }
 
   const cargarPerfiles = async (uid: string) => {
-    const { data } = await supabase
-      .from('usuarios')
-      .select('id, alias, edad, ciudad, bio, foto_principal')
-      .neq('id', uid)
-      .limit(100)
+    const { data } = await supabase.from('usuarios').select('id,alias,edad,ciudad,busca,foto_principal').neq('id', uid).limit(20)
+    if (!data) return
+    const mapped = data.map(u => ({
+      ...u,
+      online: Math.random() > 0.5,
+      foto_url: u.foto_principal ? supabase.storage.from('fotos').getPublicUrl(u.foto_principal).data.publicUrl : null,
+    }))
+    setMiembrosDelDia(mapped.slice(0, 5))
+    setNuevos(mapped.slice(5, 10))
+    setConectados(mapped.filter((u: any) => u.online).slice(0, 5))
+    setVisitantes(mapped.slice(10, 15))
+  }
 
-    if (data) {
-      setPerfiles(data)
-      setConectados(data.slice(0, 5))
-      setVisitantes(data.slice(5, 10))
+  const darFlechazo = async (targetId: string) => {
+    if (flechazosEnviados.has(targetId)) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data: c } = await supabase.from('usuarios').select('creditos').eq('id', user.id).single()
+    if (!c || c.creditos < 1) { router.push('/creditos'); return }
+    await supabase.from('flechazos').insert({ emisor: user.id, receptor: targetId })
+    await supabase.rpc('sumar_creditos', { uid: user.id, monto: -1 })
+    setFlechazosEnviados(prev => new Set([...prev, targetId]))
+    setMiPerfil(prev => prev ? { ...prev, creditos: prev.creditos - 1 } : prev)
+    const { data: mutuo } = await supabase.from('flechazos').select('id').eq('emisor', targetId).eq('receptor', user.id).single()
+    if (mutuo) {
+      const u1 = user.id < targetId ? user.id : targetId
+      const u2 = user.id < targetId ? targetId : user.id
+      await supabase.from('matches').upsert({ usuario1: u1, usuario2: u2 })
     }
-  }
-
-  const cargarStats = async (uid: string) => {
-    const { count: v } = await supabase.from('visitantes').select('*', { count: 'exact' }).eq('visitado_id', uid)
-    const { count: f } = await supabase.from('flechazos').select('*', { count: 'exact' }).eq('receptor_id', uid)
-    const { count: m } = await supabase.from('matches').select('*', { count: 'exact' }).or(`usuario1.eq.${uid},usuario2.eq.${uid}`)
-    setStats({ visitas: v || 0, flechazos: f || 0, matches: m || 0 })
-  }
-
-  const enviarFlechazo = async () => {
-    const perfil = perfiles[idxCarrusel]
-    if (!perfil) return
-
-    await supabase.from('flechazos').insert({
-      emisor_id: userId,
-      receptor_id: perfil.id
-    })
-
-    setIdxCarrusel(Math.min(idxCarrusel + 1, perfiles.length - 1))
-  }
-
-  const saltar = () => {
-    setIdxCarrusel(Math.min(idxCarrusel + 1, perfiles.length - 1))
-  }
-
-  const siguientePerfil = () => {
-    setIdxCarrusel(Math.min(idxCarrusel + 1, perfiles.length - 1))
-  }
-
-  const anteriorPerfil = () => {
-    setIdxCarrusel(Math.max(idxCarrusel - 1, 0))
   }
 
   const logout = async () => { await supabase.auth.signOut(); router.push('/login') }
 
   if (cargando) return (
-    <div style={{ minHeight: '100vh', background: '#1a0f2e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 30, height: 30, border: '3px solid rgba(212,175,55,0.2)', borderTop: '3px solid #d4af37', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <div style={{ minHeight:'100vh', background:'#fff8f1', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20 }}>
+      <img src={LOGO} alt="LUAPP" style={{ width:130, height:'auto' }} />
+      <div style={{ width:28, height:28, border:'3px solid #f0d4d8', borderTop:'3px solid #af2245', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 
-  const perfil = perfiles[idxCarrusel]
+  const Badge = ({ n }: { n: number }) => n > 0 ? (
+    <span style={{ position:'absolute', top:-4, right:-4, background:'#af2245', color:'white', borderRadius:'50%', width:14, height:14, fontSize:9, display:'flex', alignItems:'center', justifyContent:'center' }}>{n}</span>
+  ) : null
 
-  return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg,#1a0f2e 0%,#2d1b3d 100%)', color: 'white', display: 'flex', flexDirection: 'column' }}>
-      {/* TOP BAR */}
-      <div style={{ background: 'rgba(26,15,46,0.95)', borderBottom: '1px solid rgba(212,175,55,0.2)', padding: '10px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <img src={LOGO} alt="LUAPP" style={{ height: 28, width: 'auto' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <button onClick={() => router.push('/mensajes')} style={{ background: 'none', border: 'none', color: '#d4af37', cursor: 'pointer', padding: 4, position: 'relative' }}>
-            {IconMail()}
-            <span style={{ position: 'absolute', top: -8, right: -8, background: '#af2245', color: 'white', borderRadius: '50%', width: 16, height: 16, fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
+  const ProfileCard = ({ u }: { u: any }) => {
+    const enviado = flechazosEnviados.has(u.id)
+    return (
+      <div style={{ flexShrink:0, width:100, cursor:'pointer' }}>
+        <div style={{ position:'relative', width:100, height:125, borderRadius:12, overflow:'hidden', background:'linear-gradient(160deg,#2A1840,#af2245)' }}>
+          {u.foto_url
+            ? <img src={u.foto_url} alt={u.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+            : <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.3)' }}><IconUser /></div>
+          }
+          {u.online && <span style={{ position:'absolute', top:6, right:6, width:9, height:9, borderRadius:'50%', background:'#22c55e', border:'1.5px solid white' }} />}
+          <button onClick={e => { e.stopPropagation(); darFlechazo(u.id) }}
+            style={{ position:'absolute', bottom:5, right:5, width:28, height:28, borderRadius:'50%', border:'none', cursor:'pointer', background: enviado ? '#af2245' : 'rgba(255,255,255,0.9)', display:'flex', alignItems:'center', justifyContent:'center', color: enviado ? 'white' : '#af2245' }}>
+            <IconHeart filled={enviado} />
           </button>
-          <button onClick={() => router.push('/creditos')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', padding: 4 }}>{IconStar()}</button>
-          <button onClick={() => router.push('/visitantes')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', padding: 4, position: 'relative' }}>
-            {IconEye()}
-            <span style={{ position: 'absolute', top: -8, right: -8, background: '#af2245', color: 'white', borderRadius: '50%', width: 16, height: 16, fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{stats.visitas}</span>
-          </button>
-          <button onClick={() => router.push('/notificaciones')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', padding: 4, position: 'relative' }}>
-            {IconBell()}
-            <span style={{ position: 'absolute', top: -8, right: -8, background: '#af2245', color: 'white', borderRadius: '50%', width: 16, height: 16, fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{stats.flechazos}</span>
-          </button>
-          <div style={{ fontSize: 12, color: '#888' }}>● Conectada</div>
-          <button onClick={logout} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 12, padding: 6 }}>Salir</button>
+        </div>
+        <div style={{ padding:'5px 2px' }}>
+          <div style={{ fontSize:11, fontWeight:500, color:'#1f2937', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{u.alias}</div>
+          <div style={{ fontSize:10, color:'#9ca3af' }}>{u.edad} · {u.ciudad?.split(',')[0]}</div>
         </div>
       </div>
+    )
+  }
 
-      {/* MAIN LAYOUT */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '280px 1fr 320px', gap: 20, padding: 20, overflow: 'hidden' }}>
+  const Section = ({ title, icon, users }: { title:string; icon:React.ReactNode; users:any[] }) => (
+    <div style={{ marginBottom:24 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#1f2937' }}>{icon}{title}</div>
+        <button style={{ fontSize:12, color:'#af2245', background:'none', border:'none', cursor:'pointer', padding:0 }}>Ver más →</button>
+      </div>
+      {users.length === 0
+        ? <p style={{ fontSize:12, color:'#9ca3af' }}>Sin perfiles disponibles aún.</p>
+        : <div style={{ display:'flex', gap:10, overflowX:'auto', paddingBottom:6 }}>{users.map(u => <ProfileCard key={u.id} u={u} />)}</div>
+      }
+    </div>
+  )
 
-        {/* SIDEBAR LEFT - BÚSQUEDA */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto' }}>
-          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12, padding: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#d4af37', marginBottom: 12, textTransform: 'uppercase' }}>Búsqueda</div>
-            
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', display: 'block', marginBottom: 6 }}>Edad: {filtroEdadMin} - {filtroEdadMax}</label>
-              <input type="range" min="18" max="80" value={filtroEdadMax} onChange={(e) => setFiltroEdadMax(Number(e.target.value))} style={{ width: '100%' }} />
-            </div>
-
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', display: 'block', marginBottom: 6 }}>Ciudad</label>
-              <select value={filtroCiudad} onChange={(e) => setFiltroCiudad(e.target.value)} style={{ width: '100%', padding: '8px 12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(212,175,55,0.2)', color: 'white', borderRadius: 6, fontSize: 12 }}>
-                <option value="">Todas</option>
-                <option value="Bogotá">Bogotá</option>
-                <option value="Medellín">Medellín</option>
-                <option value="Cali">Cali</option>
-              </select>
-            </div>
-
-            <button style={{ width: '100%', padding: '10px 0', background: '#d4af37', color: '#1a0f2e', fontSize: 12, fontWeight: 700, border: 'none', borderRadius: 6, cursor: 'pointer', textTransform: 'uppercase' }}>Buscar perfiles</button>
+  const SidebarContent = () => (
+    <>
+      {/* Mi perfil */}
+      <div style={{ background:'#1e1b17', borderRadius:14, padding:16, color:'white', textAlign:'center' }}>
+        <div style={{ position:'relative', display:'inline-block', marginBottom:10 }}>
+          <div style={{ width:64, height:64, borderRadius:'50%', margin:'0 auto', background:'linear-gradient(135deg,#af2245,#f07855)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:600, color:'white' }}>
+            {miPerfil?.alias?.[0]?.toUpperCase() || 'U'}
+          </div>
+          <span style={{ position:'absolute', bottom:2, right:2, width:13, height:13, borderRadius:'50%', background:'#22c55e', border:'2px solid #1e1b17' }} />
+        </div>
+        <div style={{ fontSize:14, fontWeight:600, marginBottom:2 }}>{miPerfil?.alias}</div>
+        <div style={{ fontSize:11, opacity:0.5, marginBottom:12 }}>{miPerfil?.ciudad}</div>
+        <div style={{ marginBottom:12 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, opacity:0.6, marginBottom:4 }}><span>Perfil completado</span><span>80%</span></div>
+          <div style={{ height:4, background:'rgba(255,255,255,0.15)', borderRadius:2 }}>
+            <div style={{ height:'100%', borderRadius:2, width:'80%', background:'linear-gradient(90deg,#af2245,#f07855)' }} />
           </div>
         </div>
+        <button onClick={() => router.push('/creditos')}
+          style={{ background:'rgba(175,34,69,0.25)', border:'1px solid rgba(175,34,69,0.4)', borderRadius:20, padding:'6px 14px', fontSize:12, color:'#f07855', display:'inline-flex', alignItems:'center', gap:6, cursor:'pointer', marginBottom:8 }}>
+          <IconFlame /> {miPerfil?.creditos} créditos
+        </button><br/>
+        <button onClick={() => router.push('/perfil')}
+          style={{ width:'100%', padding:'7px 0', borderRadius:20, border:'1px solid rgba(255,255,255,0.2)', background:'transparent', color:'white', fontSize:12, cursor:'pointer' }}>
+          Modificar perfil
+        </button>
+      </div>
 
-        {/* CENTER - CARRUSEL */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }}>
-          {/* STATS */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12, padding: 14, textAlign: 'center' }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#d4af37', marginBottom: 4 }}>{stats.visitas}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)' }}>Visitas</div>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12, padding: 14, textAlign: 'center' }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#af2245', marginBottom: 4 }}>{stats.flechazos}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)' }}>Flechazos</div>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12, padding: 14, textAlign: 'center' }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#d4af37', marginBottom: 4 }}>{stats.matches}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)' }}>Matches</div>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12, padding: 14, textAlign: 'center' }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#d4af37', marginBottom: 4 }}>{miPerfil?.creditos}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)' }}>Créditos</div>
-            </div>
-          </div>
-
-          {/* CARRUSEL */}
-          {perfil ? (
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: 16 }}>
-              {/* FOTO */}
-              <div style={{ position: 'relative', height: 400, background: 'linear-gradient(135deg,#2A1840,#af2245)', borderRadius: 8, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {perfil.foto_principal && (
-                  <img src={perfil.foto_principal} alt={perfil.alias} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                )}
-              </div>
-
-              {/* INFO */}
-              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>{perfil.alias}, {perfil.edad}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 16 }}{perfil.ciudad}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>{perfil.bio || 'Sin descripción'}</div>
+      {/* Filtros */}
+      <div style={{ background:'#f9f5f0', borderRadius:14, padding:14 }}>
+        <div style={{ fontSize:11, fontWeight:600, color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12, display:'flex', alignItems:'center', gap:6 }}>
+          <IconSearch /> Búsqueda
+        </div>
+        <div style={{ position:'relative', marginBottom:8 }}>
+          <button onClick={() => setCiudadOpen(!ciudadOpen)}
+            style={{ width:'100%', padding:'7px 10px', borderRadius:8, textAlign:'left', border:'0.5px solid #e0bec1', background:'white', fontSize:12, color: ciudadFiltro ? '#2A1840' : '#9ca3af', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer' }}>
+            {ciudadFiltro || 'Ciudad...'} <IconChevronDown />
+          </button>
+          {ciudadOpen && (
+            <div style={{ position:'absolute', top:'110%', left:0, right:0, zIndex:50, background:'white', border:'0.5px solid #e0bec1', borderRadius:10, maxHeight:200, overflowY:'auto', boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}>
+              <button onClick={() => { setCiudadFiltro(''); setCiudadOpen(false) }}
+                style={{ width:'100%', textAlign:'left', padding:'7px 12px', fontSize:11, color:'#9ca3af', background:'none', border:'none', cursor:'pointer' }}>
+                Todas las ciudades
+              </button>
+              {Object.entries(CIUDADES).map(([region, cities]) => (
+                <div key={region}>
+                  <div style={{ padding:'5px 12px', fontSize:10, fontWeight:600, background:'#f9f5f0', color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.05em' }}>{region}</div>
+                  {cities.map(c => (
+                    <button key={c} onClick={() => { setCiudadFiltro(c); setCiudadOpen(false) }}
+                      style={{ width:'100%', textAlign:'left', padding:'6px 16px', fontSize:12, background: ciudadFiltro === c ? '#fff0f3' : 'none', color: ciudadFiltro === c ? '#af2245' : '#374151', border:'none', cursor:'pointer' }}>
+                      {c}
+                    </button>
+                  ))}
                 </div>
-
-                <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-                  <button onClick={enviarFlechazo} style={{ flex: 1, padding: '12px 0', background: 'rgba(175,34,69,0.2)', border: '1px solid #af2245', color: '#af2245', fontSize: 12, fontWeight: 700, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                    {IconHeart()} Me interesa
-                  </button>
-                  <button onClick={saltar} style={{ flex: 1, padding: '12px 0', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 700, borderRadius: 6, cursor: 'pointer' }}>
-                    Pasar
-                  </button>
-                </div>
-
-                {/* NAVEGACIÓN */}
-                <div style={{ display: 'flex', gap: 8, marginTop: 12, justifyContent: 'center' }}>
-                  <button onClick={anteriorPerfil} style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)', color: '#d4af37', padding: '8px 12px', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                    {IconChevLeft()}
-                  </button>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{idxCarrusel + 1} / {perfiles.length}</span>
-                  <button onClick={siguientePerfil} style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)', color: '#d4af37', padding: '8px 12px', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                    {IconChevRight()}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 400, color: 'rgba(255,255,255,0.4)' }}>
-              <p>No hay más perfiles</p>
+              ))}
             </div>
           )}
         </div>
+        <div style={{ marginBottom:8 }}>
+          <div style={{ fontSize:11, color:'#9ca3af', marginBottom:4 }}>Edad: 18 – {edadMax} años</div>
+          <input type="range" min={18} max={80} value={edadMax} onChange={e => setEdadMax(Number(e.target.value))} style={{ width:'100%' }} />
+        </div>
+        <select value={busca} onChange={e => setBusca(e.target.value)}
+          style={{ width:'100%', padding:'7px 10px', borderRadius:8, fontSize:12, border:'0.5px solid #e0bec1', background:'white', marginBottom:8, color: busca ? '#2A1840' : '#9ca3af' }}>
+          <option value="">¿Qué busca?</option>
+          <option>Aventura discreta</option>
+          <option>Amistad especial</option>
+          <option>Sin compromiso</option>
+          <option>Relación seria</option>
+        </select>
+        <select style={{ width:'100%', padding:'7px 10px', borderRadius:8, fontSize:12, border:'0.5px solid #e0bec1', background:'white', marginBottom:10, color:'#2A1840' }}>
+          <option>Dentro de 10 km</option>
+          <option>Dentro de 25 km</option>
+          <option>Dentro de 50 km</option>
+          <option>Todo el país</option>
+        </select>
+        <button onClick={() => { cargarPerfiles(userId); setSidebarOpen(false) }}
+          style={{ width:'100%', padding:'9px 0', borderRadius:20, border:'none', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', fontSize:12, fontWeight:600, cursor:'pointer', boxShadow:'0 4px 12px rgba(175,34,69,0.25)' }}>
+          Buscar perfiles
+        </button>
+      </div>
+    </>
+  )
 
-        {/* SIDEBAR RIGHT */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto' }}>
-          {/* CONECTADOS */}
-          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12, padding: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#d4af37', marginBottom: 12 }}>Conectados ahora</div>
-            {conectados.map(u => (
-              <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'} onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#2A1840,#af2245)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {u.foto_principal ? <img src={u.foto_principal} alt={u.alias} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : IconUser()}
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 700 }}>{u.alias}</div>
-                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>{u.edad} años</div>
-                </div>
+  return (
+    <div style={{ minHeight:'100vh', background:'#fff8f1' }}>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .dash-grid { display: grid; grid-template-columns: 260px 1fr; max-width: 1100px; margin: 0 auto; }
+        .sidebar-desktop { display: flex; flex-direction: column; gap: 16px; padding: 20px 16px; border-right: 0.5px solid #f0d4d8; min-height: calc(100vh - 52px); background: white; }
+        .main-content { padding: 20px 24px; overflow-y: auto; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 24px; }
+        .bottom-nav { display: none; }
+        .mobile-drawer { display: none; }
+        .topbar-menu-btn { display: none; }
+        @media (max-width: 768px) {
+          .dash-grid { grid-template-columns: 1fr !important; }
+          .sidebar-desktop { display: none !important; }
+          .main-content { padding: 16px; padding-bottom: 80px; }
+          .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
+          .bottom-nav { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 0.5px solid #f0d4d8; z-index: 40; padding: 8px 0; }
+          .mobile-drawer { display: block; }
+          .topbar-menu-btn { display: flex !important; }
+          .topbar-status { display: none !important; }
+          .topbar-logout { display: none !important; }
+        }
+      `}</style>
+
+      {/* Top bar */}
+      <div style={{ background:'white', borderBottom:'0.5px solid #f0d4d8', padding:'10px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:30 }}>
+        {/* Logo real */}
+        <img src={LOGO} alt="LUAPP" style={{ height:34, width:'auto', objectFit:'contain' }} />
+
+        {/* Iconos centro */}
+        <div style={{ display:'flex', alignItems:'center', gap:16, color:'#6b7280' }}>
+          {[
+            { icon:<IconMail />, badge:3, path:'/mensajes' },
+            { icon:<IconStar />, badge:0, path:'' },
+            { icon:<IconEye />, badge:7, path:'' },
+            { icon:<IconBell />, badge:2, path:'' },
+          ].map((item, i) => (
+            <button key={i} onClick={() => item.path && router.push(item.path)}
+              style={{ background:'none', border:'none', cursor:'pointer', color:'#6b7280', position:'relative' }}>
+              {item.icon}
+              <Badge n={item.badge} />
+            </button>
+          ))}
+        </div>
+
+        {/* Derecha desktop */}
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <div className="topbar-status" style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'#6b7280', background:'#f9fafb', border:'0.5px solid #e5e7eb', padding:'4px 12px', borderRadius:20 }}>
+            <span style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', display:'inline-block' }} /> Conectada
+          </div>
+          <button className="topbar-logout" onClick={logout} style={{ background:'none', border:'none', cursor:'pointer', color:'#6b7280', display:'flex', alignItems:'center', gap:4, fontSize:12 }}>
+            <IconLogout /> Salir
+          </button>
+          {/* Botón hamburguesa mobile */}
+          <button className="topbar-menu-btn" onClick={() => setSidebarOpen(true)}
+            style={{ background:'none', border:'none', cursor:'pointer', color:'#6b7280', alignItems:'center' }}>
+            <IconMenu />
+          </button>
+        </div>
+      </div>
+
+      {/* Drawer mobile */}
+      {sidebarOpen && (
+        <div className="mobile-drawer">
+          {/* Overlay */}
+          <div onClick={() => setSidebarOpen(false)}
+            style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:40 }} />
+          {/* Panel */}
+          <div style={{ position:'fixed', top:0, left:0, bottom:0, width:280, background:'white', zIndex:50, overflowY:'auto', padding:16, display:'flex', flexDirection:'column', gap:16 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+              <img src={LOGO} alt="LUAPP" style={{ height:28, width:'auto' }} />
+              <button onClick={() => setSidebarOpen(false)} style={{ background:'none', border:'none', cursor:'pointer', color:'#9ca3af' }}>
+                <IconX />
+              </button>
+            </div>
+            <SidebarContent />
+            <button onClick={logout} style={{ width:'100%', padding:'10px 0', borderRadius:20, border:'0.5px solid #e0bec1', background:'white', color:'#6b7280', fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+              <IconLogout /> Cerrar sesión
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Grid layout */}
+      <div className="dash-grid">
+        {/* Sidebar desktop */}
+        <div className="sidebar-desktop">
+          <SidebarContent />
+        </div>
+
+        {/* Main content */}
+        <div className="main-content">
+          {/* Stats */}
+          <div className="stats-grid">
+            {[
+              { num:24, lbl:'Visitantes hoy' },
+              { num:8, lbl:'Flechazos recibidos' },
+              { num:3, lbl:'Matches nuevos' },
+              { num: miPerfil?.creditos ?? 0, lbl:'Créditos' },
+            ].map(s => (
+              <div key={s.lbl} style={{ background:'white', border:'0.5px solid #f0d4d8', borderRadius:12, padding:'12px 14px', textAlign:'center' }}>
+                <div style={{ fontSize:22, fontWeight:700, color:'#af2245' }}>{s.num}</div>
+                <div style={{ fontSize:11, color:'#9ca3af', marginTop:2 }}>{s.lbl}</div>
               </div>
             ))}
           </div>
 
-          {/* VISITANTES */}
-          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 12, padding: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#d4af37', marginBottom: 12 }}>Visitantes</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-              {visitantes.map(u => (
-                <div key={u.id} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 8, overflow: 'hidden', cursor: 'pointer', paddingBottom: '100%', position: 'relative', height: 0 }}>
-                  {u.foto_principal && <img src={u.foto_principal} alt={u.alias} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
-                </div>
-              ))}
-            </div>
-          </div>
+          <Section title="Miembro del día" icon={<IconCrown />} users={miembrosDelDia} />
+          <Section title="Nuevos miembros" icon={<IconUsers />} users={nuevos} />
+          <Section
+            title="Conectados ahora"
+            icon={<span style={{ width:8, height:8, borderRadius:'50%', background:'#22c55e', display:'inline-block' }} />}
+            users={conectados}
+          />
+          <Section title="Mis últimos visitantes" icon={<IconEye />} users={visitantes} />
         </div>
+      </div>
+
+      {/* Bottom nav mobile */}
+      <div className="bottom-nav">
+        {[
+          { icon:<IconSearch />, path:'/explorar', lbl:'Explorar', active:true },
+          { icon:<IconMessage />, path:'/mensajes', lbl:'Mensajes', active:false },
+          { icon:<IconFlame />, path:'/creditos', lbl:'Créditos', active:false },
+          { icon:<IconUser />, path:'/perfil', lbl:'Perfil', active:false },
+        ].map(item => (
+          <button key={item.path} onClick={() => router.push(item.path)}
+            style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3, background:'none', border:'none', cursor:'pointer', color: item.active ? '#af2245' : '#9ca3af', fontSize:10 }}>
+            {item.icon}
+            <span>{item.lbl}</span>
+            {item.active && <span style={{ width:4, height:4, borderRadius:'50%', background:'#af2245' }} />}
+          </button>
+        ))}
       </div>
     </div>
   )
+
 }
+
