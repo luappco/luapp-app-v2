@@ -6,13 +6,10 @@ import { createClient } from '@/lib/supabase/client'
 
 const IconSearch = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
 const IconHeart = ({ filled }: { filled?: boolean }) => <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? '#af2245' : 'none'} stroke={filled ? '#af2245' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-const IconMail = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-const IconLogout = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+const IconMessage = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 const IconFlame = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
 const IconUser = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-const IconMessage = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 const IconChevronDown = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-const IconMenu = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 const IconX = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 
 const CIUDADES: Record<string, string[]> = {
@@ -45,6 +42,7 @@ export default function ExplorarPage() {
   const [flechazosEnviados, setFlechazosEnviados] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [perfilSeleccionado, setPerfilSeleccionado] = useState<Usuario | null>(null)
+  const [tieneMatch, setTieneMatch] = useState(false)
 
   // Filtros
   const [edadMin, setEdadMin] = useState(18)
@@ -114,6 +112,13 @@ export default function ExplorarPage() {
     }
   }
 
+  const verificarMatch = async (otroId: string) => {
+    const { data } = await supabase.from('matches').select('id')
+      .or(`and(usuario1.eq.${userId},usuario2.eq.${otroId}),and(usuario1.eq.${otroId},usuario2.eq.${userId})`)
+      .single()
+    setTieneMatch(!!data)
+  }
+
   const darFlechazo = async (targetId: string) => {
     if (flechazosEnviados.has(targetId)) return
     const { data: { user } } = await supabase.auth.getUser()
@@ -131,8 +136,13 @@ export default function ExplorarPage() {
       const u1 = user.id < targetId ? user.id : targetId
       const u2 = user.id < targetId ? targetId : user.id
       await supabase.from('matches').insert({ usuario1: u1, usuario2: u2 })
+      setPerfilSeleccionado(null)
       setTimeout(() => router.push(`/mensajes/${targetId}`), 500)
     }
+  }
+
+  const irAlChat = (otroId: string) => {
+    router.push(`/mensajes/${otroId}`)
   }
 
   const logout = async () => { await supabase.auth.signOut(); router.push('/login') }
@@ -145,14 +155,13 @@ export default function ExplorarPage() {
     </div>
   )
 
-  const Badge = ({ n }: { n: number }) => n > 0 ? (
-    <span style={{ position:'absolute', top:-4, right:-4, background:'#af2245', color:'white', borderRadius:'50%', width:14, height:14, fontSize:9, display:'flex', alignItems:'center', justifyContent:'center' }}>{n}</span>
-  ) : null
-
   const ProfileCard = ({ u }: { u: any }) => {
     const enviado = flechazosEnviados.has(u.id)
     return (
-      <div style={{ flexShrink:0, width:100, cursor:'pointer' }} onClick={() => setPerfilSeleccionado(u)}>
+      <div style={{ flexShrink:0, width:100, cursor:'pointer' }} onClick={() => {
+        setPerfilSeleccionado(u)
+        verificarMatch(u.id)
+      }}>
         <div style={{ position:'relative', width:100, height:125, borderRadius:12, overflow:'hidden', background:'linear-gradient(160deg,#2A1840,#af2245)' }}>
           {u.foto_url
             ? <img src={u.foto_url} alt={u.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
@@ -188,7 +197,6 @@ export default function ExplorarPage() {
     <div style={{ minHeight:'100vh', background:'#fff8f1' }}>
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
-        .container { max-width: 1200px; margin: 0 auto; }
       `}</style>
 
       {/* Top bar */}
@@ -333,10 +341,17 @@ export default function ExplorarPage() {
               </div>
 
               <div style={{ display:'flex', gap:10 }}>
-                <button onClick={() => { darFlechazo(perfilSeleccionado.id); setPerfilSeleccionado(null) }}
-                  style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-                  <IconHeart /> Me interesa
-                </button>
+                {tieneMatch ? (
+                  <button onClick={() => irAlChat(perfilSeleccionado.id)}
+                    style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                    <IconMessage /> Enviar mensaje
+                  </button>
+                ) : (
+                  <button onClick={() => { darFlechazo(perfilSeleccionado.id) }}
+                    style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                    <IconHeart /> Me interesa
+                  </button>
+                )}
                 <button onClick={() => setPerfilSeleccionado(null)}
                   style={{ flex:1, padding:'12px 0', background:'#f9f5f0', color:'#6b7280', border:'none', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer' }}>
                   Pasar
