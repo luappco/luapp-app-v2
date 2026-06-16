@@ -33,7 +33,7 @@ const CIUDADES: Record<string, string[]> = {
   '🇫🇷 Francia': ['París','Lyon','Marsella'],
 }
 
-interface Usuario { id:string; alias:string; edad:number; ciudad:string; busca:string; foto_principal?:string; online?:boolean; foto_url?:string | null } 
+interface Usuario { id:string; alias:string; edad:number; ciudad:string; busca:string; foto_principal?:string; online?:boolean; foto_url?:string | null; bio?:string } 
 interface MiPerfil { alias:string; ciudad:string; creditos:number }
 
 const LOGO = 'https://luapp.co/images/logo/logo-color.webp'
@@ -51,6 +51,7 @@ export default function ExplorarPage() {
   const [cargando, setCargando] = useState(true)
   const [flechazosEnviados, setFlechazosEnviados] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [perfilSeleccionado, setPerfilSeleccionado] = useState<Usuario | null>(null)
 
   const [edadMax, setEdadMax] = useState(60)
   const [ciudadFiltro, setCiudadFiltro] = useState('')
@@ -70,7 +71,7 @@ export default function ExplorarPage() {
   }
 
   const cargarPerfiles = async (uid: string) => {
-    const { data } = await supabase.from('usuarios').select('id,alias,edad,ciudad,busca,foto_principal').neq('id', uid).limit(20)
+    const { data } = await supabase.from('usuarios').select('id,alias,edad,ciudad,busca,foto_principal,bio').neq('id', uid).limit(20)
     if (!data) return
     const mapped = data.map(u => ({
       ...u,
@@ -118,7 +119,7 @@ export default function ExplorarPage() {
   const ProfileCard = ({ u }: { u: any }) => {
     const enviado = flechazosEnviados.has(u.id)
     return (
-      <div style={{ flexShrink:0, width:100, cursor:'pointer' }}>
+      <div style={{ flexShrink:0, width:100, cursor:'pointer' }} onClick={() => setPerfilSeleccionado(u)}>
         <div style={{ position:'relative', width:100, height:125, borderRadius:12, overflow:'hidden', background:'linear-gradient(160deg,#2A1840,#af2245)' }}>
           {u.foto_url
             ? <img src={u.foto_url} alt={u.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
@@ -261,10 +262,8 @@ export default function ExplorarPage() {
 
       {/* Top bar */}
       <div style={{ background:'white', borderBottom:'0.5px solid #f0d4d8', padding:'10px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:30 }}>
-        {/* Logo real */}
         <img src={LOGO} alt="LUAPP" style={{ height:34, width:'auto', objectFit:'contain' }} />
 
-        {/* Iconos centro */}
         <div style={{ display:'flex', alignItems:'center', gap:16, color:'#6b7280' }}>
           {[
             { icon:<IconMail />, badge:3, path:'/mensajes' },
@@ -280,7 +279,6 @@ export default function ExplorarPage() {
           ))}
         </div>
 
-        {/* Derecha desktop */}
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
           <div className="topbar-status" style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'#6b7280', background:'#f9fafb', border:'0.5px solid #e5e7eb', padding:'4px 12px', borderRadius:20 }}>
             <span style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', display:'inline-block' }} /> Conectada
@@ -288,7 +286,6 @@ export default function ExplorarPage() {
           <button className="topbar-logout" onClick={logout} style={{ background:'none', border:'none', cursor:'pointer', color:'#6b7280', display:'flex', alignItems:'center', gap:4, fontSize:12 }}>
             <IconLogout /> Salir
           </button>
-          {/* Botón hamburguesa mobile */}
           <button className="topbar-menu-btn" onClick={() => setSidebarOpen(true)}
             style={{ background:'none', border:'none', cursor:'pointer', color:'#6b7280', alignItems:'center' }}>
             <IconMenu />
@@ -299,10 +296,8 @@ export default function ExplorarPage() {
       {/* Drawer mobile */}
       {sidebarOpen && (
         <div className="mobile-drawer">
-          {/* Overlay */}
           <div onClick={() => setSidebarOpen(false)}
             style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:40 }} />
-          {/* Panel */}
           <div style={{ position:'fixed', top:0, left:0, bottom:0, width:280, background:'white', zIndex:50, overflowY:'auto', padding:16, display:'flex', flexDirection:'column', gap:16 }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
               <img src={LOGO} alt="LUAPP" style={{ height:28, width:'auto' }} />
@@ -318,16 +313,61 @@ export default function ExplorarPage() {
         </div>
       )}
 
+      {/* MODAL DE PERFIL */}
+      {perfilSeleccionado && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:100, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+          <div style={{ background:'white', borderRadius:16, width:'100%', maxWidth:400, maxHeight:'90vh', overflowY:'auto' }}>
+            {/* Foto */}
+            <div style={{ position:'relative', height:300, background:'linear-gradient(160deg,#2A1840,#af2245)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              {perfilSeleccionado.foto_url
+                ? <img src={perfilSeleccionado.foto_url} alt={perfilSeleccionado.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                : <div style={{ fontSize:60, color:'rgba(255,255,255,0.3)' }}><IconUser /></div>
+              }
+              <button onClick={() => setPerfilSeleccionado(null)} style={{ position:'absolute', top:12, right:12, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:'50%', width:32, height:32, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#af2245' }}>
+                <IconX />
+              </button>
+            </div>
+
+            {/* Información */}
+            <div style={{ padding:20 }}>
+              <div style={{ fontSize:24, fontWeight:700, color:'#1f2937', marginBottom:4 }}>{perfilSeleccionado.alias}, {perfilSeleccionado.edad}</div>
+              <div style={{ fontSize:14, color:'#9ca3af', marginBottom:16 }}>📍 {perfilSeleccionado.ciudad}</div>
+
+              {/* Bio */}
+              <div style={{ marginBottom:16, padding:12, background:'#f9f5f0', borderRadius:10 }}>
+                <div style={{ fontSize:12, fontWeight:600, color:'#6b7280', marginBottom:6 }}>Acerca de</div>
+                <div style={{ fontSize:13, color:'#1f2937', lineHeight:'1.6' }}>{perfilSeleccionado.bio || 'Sin descripción'}</div>
+              </div>
+
+              {/* Búsqueda */}
+              <div style={{ marginBottom:20, padding:12, background:'#fff0f3', borderRadius:10 }}>
+                <div style={{ fontSize:12, fontWeight:600, color:'#af2245', marginBottom:6 }}>¿Qué busca?</div>
+                <div style={{ fontSize:13, color:'#1f2937' }}>{perfilSeleccionado.busca || 'No especificado'}</div>
+              </div>
+
+              {/* Botones */}
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={() => { darFlechazo(perfilSeleccionado.id); setPerfilSeleccionado(null) }}
+                  style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                  <IconHeart /> Me interesa
+                </button>
+                <button onClick={() => setPerfilSeleccionado(null)}
+                  style={{ flex:1, padding:'12px 0', background:'#f9f5f0', color:'#6b7280', border:'none', borderRadius:10, fontSize:14, fontWeight:600, cursor:'pointer' }}>
+                  Pasar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Grid layout */}
       <div className="dash-grid">
-        {/* Sidebar desktop */}
         <div className="sidebar-desktop">
           <SidebarContent />
         </div>
 
-        {/* Main content */}
         <div className="main-content">
-          {/* Stats */}
           <div className="stats-grid">
             {[
               { num:24, lbl:'Visitantes hoy' },
@@ -373,4 +413,3 @@ export default function ExplorarPage() {
   )
 
 }
-
