@@ -1,4 +1,4 @@
-'use client'
+ 'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -26,6 +26,7 @@ const IconDot     = () => <span style={{width:8,height:8,borderRadius:'50%',back
 
 export default function PerfilPage() {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
+  const [email, setEmail] = useState('')
   const [fotos, setFotos] = useState<string[]>([])
   const [fotoUrls, setFotoUrls] = useState<string[]>([])
   const [fotoIdx, setFotoIdx] = useState(0)
@@ -43,11 +44,12 @@ export default function PerfilPage() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session?.user) { router.push('/login'); return }
     const uid = session.user.id
-    const [{ data }, _] = await Promise.all([
-      supabase.from('usuarios').select('*').eq('id', uid).single(),
-      cargarFotos(uid),
-    ])
-    setUsuario(data)
+    setEmail(session.user.email || '')
+    
+    const { data } = await supabase.from('usuarios').select('*').eq('id', uid).single()
+    if (data) setUsuario(data)
+    
+    await cargarFotos(uid)
     setCargando(false)
   }
 
@@ -138,25 +140,28 @@ export default function PerfilPage() {
     <div style={{ minHeight:'100vh', background:'#fff8f1', maxWidth:480, margin:'0 auto', paddingBottom:90 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} * {box-sizing:border-box}`}</style>
 
-      {/* Top bar */}
-      <div style={{ background:'white', borderBottom:'0.5px solid #f0d4d8', padding:'10px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:30 }}>
+      {/* ── Top bar CON ALIAS Y EMAIL ── */}
+      <div style={{ background:'white', borderBottom:'0.5px solid #f0d4d8', padding:'12px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:30 }}>
         <img src={LOGO} alt="LUAPP" style={{ height:30, width:'auto' }} />
-        <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:'#6b7280' }}>
-          <IconDot />{usuario?.alias}
+        
+        <div style={{ flex:1, marginLeft:12, display:'flex', flexDirection:'column', gap:2 }}>
+          <div style={{ fontSize:13, fontWeight:700, color:'#2A1840' }}>{usuario?.alias || 'Usuario'}</div>
+          <div style={{ fontSize:11, color:'#9ca3af' }}>{email}</div>
         </div>
-        <button onClick={cerrarSesion} style={{ background:'none', border:'none', cursor:'pointer', color:'#9ca3af', display:'flex', alignItems:'center', gap:4, fontSize:12 }}>
+        
+        <button onClick={cerrarSesion} style={{ background:'none', border:'none', cursor:'pointer', color:'#9ca3af', display:'flex', alignItems:'center', gap:4, fontSize:12, marginLeft:12 }}>
           <IconLogout /> Salir
         </button>
       </div>
 
-      {/* Cabecera */}
+      {/* ── Cabecera con online ── */}
       <div style={{ padding:'16px 16px 0', display:'flex', alignItems:'center', gap:8 }}>
         <IconDot />
         <span style={{ fontSize:18, fontWeight:700, color:'#2A1840' }}>{usuario?.alias}</span>
         <span style={{ fontSize:11, color:'#22c55e', fontWeight:500 }}>En línea</span>
       </div>
 
-      {/* Foto principal con carrusel */}
+      {/* ── Foto principal ── */}
       <div style={{ margin:'12px 16px 0', position:'relative', borderRadius:16, overflow:'hidden', background:'#1e1b17', aspectRatio:'4/3' }}>
         {fotoActual ? (
           <img src={fotoActual} alt="foto" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
@@ -167,7 +172,6 @@ export default function PerfilPage() {
           </div>
         )}
 
-        {/* Flechas carrusel */}
         {fotoUrls.length > 1 && (
           <>
             <button onClick={() => setFotoIdx(i => (i - 1 + fotoUrls.length) % fotoUrls.length)}
@@ -181,7 +185,6 @@ export default function PerfilPage() {
           </>
         )}
 
-        {/* Dots */}
         {fotoUrls.length > 1 && (
           <div style={{ position:'absolute', bottom:8, left:0, right:0, display:'flex', justifyContent:'center', gap:5 }}>
             {fotoUrls.map((_, i) => (
@@ -191,13 +194,12 @@ export default function PerfilPage() {
           </div>
         )}
 
-        {/* % completado */}
         <div style={{ position:'absolute', bottom:12, right:12, width:36, height:36, borderRadius:'50%', background:'#af2245', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700, color:'white', border:'2px solid white' }}>
           80%
         </div>
       </div>
 
-      {/* Acciones rápidas */}
+      {/* ── Acciones ── */}
       <div style={{ margin:'10px 16px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
         <button onClick={() => inputRef.current?.click()}
           style={{ padding:'10px 0', borderRadius:12, border:'none', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
@@ -245,7 +247,7 @@ export default function PerfilPage() {
           <button onClick={() => router.push('/perfil/editar')} style={S.modBtn}><IconEdit /> Modificar</button>
         </div>
 
-        {/* Fotos / Book */}
+        {/* Fotos */}
         <div style={S.card}>
           <div style={{ display:'flex', gap:8, marginBottom:12 }}>
             {(['publico','privado'] as const).map(t => (
@@ -315,7 +317,6 @@ export default function PerfilPage() {
         <div style={S.card}>
           <div style={S.secTitle}><IconShield /> Configuración</div>
 
-          {/* Incógnito */}
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', borderBottom:'0.5px solid #f9f5f0' }}>
             <div>
               <div style={{ fontSize:13, fontWeight:600, color:'#2A1840' }}>Modo incógnito</div>
@@ -327,7 +328,6 @@ export default function PerfilPage() {
             </button>
           </div>
 
-          {/* Créditos */}
           <button onClick={() => router.push('/creditos')}
             style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', background:'none', border:'none', borderBottom:'0.5px solid #f9f5f0', cursor:'pointer' }}>
             <div style={{ textAlign:'left' }}>
