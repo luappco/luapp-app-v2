@@ -1,4 +1,4 @@
- 'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -47,7 +47,7 @@ export default function ExplorarPage() {
   const [miembrosDelDia, setMiembrosDelDia] = useState<Usuario[]>([])
   const [nuevos, setNuevos] = useState<Usuario[]>([])
   const [conectados, setConectados] = useState<Usuario[]>([])
-  const [visitantes, setVisitantes] = useState<Usuario[]>([])
+  const [flechazosRecibidos, setFlechazosRecibidos] = useState<Usuario[]>([])
   const [cargando, setCargando] = useState(true)
   const [flechazosEnviados, setFlechazosEnviados] = useState<Set<string>>(new Set())
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -68,10 +68,10 @@ export default function ExplorarPage() {
     const { data: p } = await supabase.from('usuarios').select('alias,ciudad,creditos,genero').eq('id', user.id).single()
     if (p) {
       setMiPerfil({ alias: p.alias, ciudad: p.ciudad, creditos: p.creditos || 0, genero: p.genero })
-      // Set default gender to search for (opposite)
       setGeneroBusca(p.genero?.toLowerCase() === 'hombre' ? 'mujer' : 'hombre')
     }
     await cargarPerfiles(user.id, generoBusca)
+    await cargarFlechazosRecibidos(user.id)
     setCargando(false)
   }
 
@@ -86,7 +86,24 @@ export default function ExplorarPage() {
     setMiembrosDelDia(mapped.slice(0, 5))
     setNuevos(mapped.slice(5, 10))
     setConectados(mapped.filter((u: any) => u.online).slice(0, 5))
-    setVisitantes(mapped.slice(10, 15))
+  }
+
+  const cargarFlechazosRecibidos = async (uid: string) => {
+    const { data: flechazos } = await supabase.from('flechazos').select('de_usuario').eq('a_usuario', uid)
+    if (!flechazos || flechazos.length === 0) {
+      setFlechazosRecibidos([])
+      return
+    }
+    const emisoresIds = flechazos.map(f => f.de_usuario)
+    const { data: usuarios } = await supabase.from('usuarios').select('id,alias,edad,ciudad,busca,foto_principal,bio').in('id', emisoresIds)
+    if (usuarios) {
+      const mapped = usuarios.map(u => ({
+        ...u,
+        online: Math.random() > 0.5,
+        foto_url: u.foto_principal ? supabase.storage.from('fotos').getPublicUrl(u.foto_principal).data.publicUrl : null,
+      }))
+      setFlechazosRecibidos(mapped)
+    }
   }
 
   const darFlechazo = async (targetId: string) => {
@@ -95,15 +112,19 @@ export default function ExplorarPage() {
     if (!user) return
     const { data: c } = await supabase.from('usuarios').select('creditos').eq('id', user.id).single()
     if (!c || c.creditos < 1) { router.push('/creditos'); return }
+    
     await supabase.from('flechazos').insert({ de_usuario: user.id, a_usuario: targetId })
     await supabase.rpc('sumar_creditos', { uid: user.id, monto: -1 })
     setFlechazosEnviados(prev => new Set([...prev, targetId]))
     setMiPerfil(prev => prev ? { ...prev, creditos: prev.creditos - 1 } : prev)
+    
     const { data: mutuo } = await supabase.from('flechazos').select('id').eq('de_usuario', targetId).eq('a_usuario', user.id).single()
     if (mutuo) {
       const u1 = user.id < targetId ? user.id : targetId
       const u2 = user.id < targetId ? targetId : user.id
       await supabase.from('matches').insert({ usuario1: u1, usuario2: u2 })
+      // ¡MATCH! Ir al chat automáticamente
+      setTimeout(() => router.push(`/mensajes/${u1}_${u2}`), 500)
     }
   }
 
@@ -147,7 +168,7 @@ export default function ExplorarPage() {
   const Section = ({ title, icon, users }: { title:string; icon:React.ReactNode; users:any[] }) => (
     <div style={{ marginBottom:24 }}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#1f2937' }}>{icon}{title}</div>
+        <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#1f2937' }}>{icon}{title} ({users.length})</div>
         <button style={{ fontSize:12, color:'#af2245', background:'none', border:'none', cursor:'pointer', padding:0 }}>Ver más →</button>
       </div>
       {users.length === 0
@@ -159,7 +180,6 @@ export default function ExplorarPage() {
 
   const SidebarContent = () => (
     <>
-      {/* Mi perfil */}
       <div style={{ background:'#1e1b17', borderRadius:14, padding:16, color:'white', textAlign:'center' }}>
         <div style={{ position:'relative', display:'inline-block', marginBottom:10 }}>
           <div style={{ width:64, height:64, borderRadius:'50%', margin:'0 auto', background:'linear-gradient(135deg,#af2245,#f07855)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:600, color:'white' }}>
@@ -185,53 +205,22 @@ export default function ExplorarPage() {
         </button>
       </div>
 
-      {/* Filtros */}
       <div style={{ background:'#f9f5f0', borderRadius:14, padding:14 }}>
         <div style={{ fontSize:11, fontWeight:600, color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12, display:'flex', alignItems:'center', gap:6 }}>
           <IconSearch /> Búsqueda
         </div>
 
-        {/* Género a buscar */}
         <select value={generoBusca} onChange={e => { setGeneroBusca(e.target.value); cargarPerfiles(userId, e.target.value) }}
           style={{ width:'100%', padding:'7px 10px', borderRadius:8, fontSize:12, border:'0.5px solid #e0bec1', background:'white', marginBottom:8, color:'#2A1840', fontWeight:600 }}>
           <option value="hombre">👨 Buscando: Hombres</option>
           <option value="mujer">👩 Buscando: Mujeres</option>
         </select>
 
-        {/* Ciudad */}
-        <div style={{ position:'relative', marginBottom:8 }}>
-          <button onClick={() => setCiudadOpen(!ciudadOpen)}
-            style={{ width:'100%', padding:'7px 10px', borderRadius:8, textAlign:'left', border:'0.5px solid #e0bec1', background:'white', fontSize:12, color: ciudadFiltro ? '#2A1840' : '#9ca3af', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer' }}>
-            {ciudadFiltro || 'Ciudad...'} <IconChevronDown />
-          </button>
-          {ciudadOpen && (
-            <div style={{ position:'absolute', top:'110%', left:0, right:0, zIndex:50, background:'white', border:'0.5px solid #e0bec1', borderRadius:10, maxHeight:200, overflowY:'auto', boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}>
-              <button onClick={() => { setCiudadFiltro(''); setCiudadOpen(false) }}
-                style={{ width:'100%', textAlign:'left', padding:'7px 12px', fontSize:11, color:'#9ca3af', background:'none', border:'none', cursor:'pointer' }}>
-                Todas las ciudades
-              </button>
-              {Object.entries(CIUDADES).map(([region, cities]) => (
-                <div key={region}>
-                  <div style={{ padding:'5px 12px', fontSize:10, fontWeight:600, background:'#f9f5f0', color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.05em' }}>{region}</div>
-                  {cities.map(c => (
-                    <button key={c} onClick={() => { setCiudadFiltro(c); setCiudadOpen(false) }}
-                      style={{ width:'100%', textAlign:'left', padding:'6px 16px', fontSize:12, background: ciudadFiltro === c ? '#fff0f3' : 'none', color: ciudadFiltro === c ? '#af2245' : '#374151', border:'none', cursor:'pointer' }}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Edad */}
         <div style={{ marginBottom:8 }}>
           <div style={{ fontSize:11, color:'#9ca3af', marginBottom:4 }}>Edad: 18 – {edadMax} años</div>
           <input type="range" min={18} max={80} value={edadMax} onChange={e => setEdadMax(Number(e.target.value))} style={{ width:'100%' }} />
         </div>
 
-        {/* ¿Qué busca? */}
         <select value={busca} onChange={e => setBusca(e.target.value)}
           style={{ width:'100%', padding:'7px 10px', borderRadius:8, fontSize:12, border:'0.5px solid #e0bec1', background:'white', marginBottom:10, color: busca ? '#2A1840' : '#9ca3af' }}>
           <option value="">¿Qué busca?</option>
@@ -273,16 +262,15 @@ export default function ExplorarPage() {
         }
       `}</style>
 
-      {/* Top bar */}
       <div style={{ background:'white', borderBottom:'0.5px solid #f0d4d8', padding:'10px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:30 }}>
         <img src={LOGO} alt="LUAPP" style={{ height:34, width:'auto', objectFit:'contain' }} />
 
         <div style={{ display:'flex', alignItems:'center', gap:16, color:'#6b7280' }}>
           {[
-            { icon:<IconMail />, badge:3, path:'/mensajes' },
+            { icon:<IconMail />, badge:0, path:'/mensajes' },
             { icon:<IconStar />, badge:0, path:'' },
-            { icon:<IconEye />, badge:7, path:'' },
-            { icon:<IconBell />, badge:2, path:'' },
+            { icon:<IconEye />, badge:0, path:'' },
+            { icon:<IconBell />, badge:0, path:'' },
           ].map((item, i) => (
             <button key={i} onClick={() => item.path && router.push(item.path)}
               style={{ background:'none', border:'none', cursor:'pointer', color:'#6b7280', position:'relative' }}>
@@ -297,7 +285,7 @@ export default function ExplorarPage() {
             <span style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', display:'inline-block' }} /> Conectada
           </div>
           <button className="topbar-logout" onClick={logout} style={{ background:'none', border:'none', cursor:'pointer', color:'#6b7280', display:'flex', alignItems:'center', gap:4, fontSize:12 }}>
-            <IconLogout /> Salir
+            🚪 Salir
           </button>
           <button className="topbar-menu-btn" onClick={() => setSidebarOpen(true)}
             style={{ background:'none', border:'none', cursor:'pointer', color:'#6b7280', alignItems:'center' }}>
@@ -306,7 +294,6 @@ export default function ExplorarPage() {
         </div>
       </div>
 
-      {/* Drawer mobile */}
       {sidebarOpen && (
         <div className="mobile-drawer">
           <div onClick={() => setSidebarOpen(false)}
@@ -320,13 +307,12 @@ export default function ExplorarPage() {
             </div>
             <SidebarContent />
             <button onClick={logout} style={{ width:'100%', padding:'10px 0', borderRadius:20, border:'0.5px solid #e0bec1', background:'white', color:'#6b7280', fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-              <IconLogout /> Cerrar sesión
+              🚪 Cerrar sesión
             </button>
           </div>
         </div>
       )}
 
-      {/* MODAL DE PERFIL */}
       {perfilSeleccionado && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:100, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
           <div style={{ background:'white', borderRadius:16, width:'100%', maxWidth:400, maxHeight:'90vh', overflowY:'auto' }}>
@@ -372,7 +358,6 @@ export default function ExplorarPage() {
         </div>
       )}
 
-      {/* Grid layout */}
       <div className="dash-grid">
         <div className="sidebar-desktop">
           <SidebarContent />
@@ -381,9 +366,9 @@ export default function ExplorarPage() {
         <div className="main-content">
           <div className="stats-grid">
             {[
-              { num:24, lbl:'Visitantes hoy' },
-              { num:8, lbl:'Flechazos recibidos' },
-              { num:3, lbl:'Matches nuevos' },
+              { num: flechazosRecibidos.length, lbl:'❤️ Flechazos' },
+              { num:0, lbl:'Visitantes' },
+              { num:0, lbl:'Matches' },
               { num: miPerfil?.creditos ?? 0, lbl:'Créditos' },
             ].map(s => (
               <div key={s.lbl} style={{ background:'white', border:'0.5px solid #f0d4d8', borderRadius:12, padding:'12px 14px', textAlign:'center' }}>
@@ -393,6 +378,7 @@ export default function ExplorarPage() {
             ))}
           </div>
 
+          <Section title="❤️ Flechazos recibidos" icon={<IconHeart />} users={flechazosRecibidos} />
           <Section title="Miembro del día" icon={<IconCrown />} users={miembrosDelDia} />
           <Section title="Nuevos miembros" icon={<IconUsers />} users={nuevos} />
           <Section
@@ -400,11 +386,9 @@ export default function ExplorarPage() {
             icon={<span style={{ width:8, height:8, borderRadius:'50%', background:'#22c55e', display:'inline-block' }} />}
             users={conectados}
           />
-          <Section title="Mis últimos visitantes" icon={<IconEye />} users={visitantes} />
         </div>
       </div>
 
-      {/* Bottom nav mobile */}
       <div className="bottom-nav">
         {[
           { icon:<IconSearch />, path:'/explorar', lbl:'Explorar', active:true },
@@ -422,5 +406,4 @@ export default function ExplorarPage() {
       </div>
     </div>
   )
-
 }
