@@ -57,6 +57,7 @@ export default function ExplorarPage() {
   const [ciudadFiltro, setCiudadFiltro] = useState('')
   const [ciudadOpen, setCiudadOpen] = useState(false)
   const [busca, setBusca] = useState('')
+  const [generoBusca, setGeneroBusca] = useState('')
 
   useEffect(() => { init() }, [])
 
@@ -65,16 +66,17 @@ export default function ExplorarPage() {
     if (!user) { router.push('/login'); return }
     setUserId(user.id)
     const { data: p } = await supabase.from('usuarios').select('alias,ciudad,creditos,genero').eq('id', user.id).single()
-    if (p) setMiPerfil({ alias: p.alias, ciudad: p.ciudad, creditos: p.creditos || 0, genero: p.genero })
-    await cargarPerfiles(user.id, p?.genero)
+    if (p) {
+      setMiPerfil({ alias: p.alias, ciudad: p.ciudad, creditos: p.creditos || 0, genero: p.genero })
+      // Set default gender to search for (opposite)
+      setGeneroBusca(p.genero?.toLowerCase() === 'hombre' ? 'mujer' : 'hombre')
+    }
+    await cargarPerfiles(user.id, generoBusca)
     setCargando(false)
   }
 
-  const cargarPerfiles = async (uid: string, miGenero: string) => {
-    // Filtrar por género OPUESTO
-    const generoOpuesto = miGenero?.toLowerCase() === 'hombre' ? 'mujer' : 'hombre'
-    
-    const { data } = await supabase.from('usuarios').select('id,alias,edad,ciudad,busca,foto_principal,bio,genero').neq('id', uid).eq('genero', generoOpuesto).limit(20)
+  const cargarPerfiles = async (uid: string, generoABuscar: string) => {
+    const { data } = await supabase.from('usuarios').select('id,alias,edad,ciudad,busca,foto_principal,bio,genero').neq('id', uid).eq('genero', generoABuscar).limit(20)
     if (!data) return
     const mapped = data.map(u => ({
       ...u,
@@ -188,15 +190,48 @@ export default function ExplorarPage() {
         <div style={{ fontSize:11, fontWeight:600, color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.06em', marginBottom:12, display:'flex', alignItems:'center', gap:6 }}>
           <IconSearch /> Búsqueda
         </div>
+
+        {/* Género a buscar */}
+        <select value={generoBusca} onChange={e => { setGeneroBusca(e.target.value); cargarPerfiles(userId, e.target.value) }}
+          style={{ width:'100%', padding:'7px 10px', borderRadius:8, fontSize:12, border:'0.5px solid #e0bec1', background:'white', marginBottom:8, color:'#2A1840', fontWeight:600 }}>
+          <option value="hombre">👨 Buscando: Hombres</option>
+          <option value="mujer">👩 Buscando: Mujeres</option>
+        </select>
+
+        {/* Ciudad */}
         <div style={{ position:'relative', marginBottom:8 }}>
-          <button style={{ width:'100%', padding:'7px 10px', borderRadius:8, textAlign:'left', border:'0.5px solid #e0bec1', background:'white', fontSize:12, color:'#9ca3af', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer' }}>
-            {miPerfil?.genero?.toLowerCase() === 'hombre' ? '👩 Buscando: Mujeres' : '👨 Buscando: Hombres'} <IconChevronDown />
+          <button onClick={() => setCiudadOpen(!ciudadOpen)}
+            style={{ width:'100%', padding:'7px 10px', borderRadius:8, textAlign:'left', border:'0.5px solid #e0bec1', background:'white', fontSize:12, color: ciudadFiltro ? '#2A1840' : '#9ca3af', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer' }}>
+            {ciudadFiltro || 'Ciudad...'} <IconChevronDown />
           </button>
+          {ciudadOpen && (
+            <div style={{ position:'absolute', top:'110%', left:0, right:0, zIndex:50, background:'white', border:'0.5px solid #e0bec1', borderRadius:10, maxHeight:200, overflowY:'auto', boxShadow:'0 4px 16px rgba(0,0,0,0.08)' }}>
+              <button onClick={() => { setCiudadFiltro(''); setCiudadOpen(false) }}
+                style={{ width:'100%', textAlign:'left', padding:'7px 12px', fontSize:11, color:'#9ca3af', background:'none', border:'none', cursor:'pointer' }}>
+                Todas las ciudades
+              </button>
+              {Object.entries(CIUDADES).map(([region, cities]) => (
+                <div key={region}>
+                  <div style={{ padding:'5px 12px', fontSize:10, fontWeight:600, background:'#f9f5f0', color:'#9ca3af', textTransform:'uppercase', letterSpacing:'0.05em' }}>{region}</div>
+                  {cities.map(c => (
+                    <button key={c} onClick={() => { setCiudadFiltro(c); setCiudadOpen(false) }}
+                      style={{ width:'100%', textAlign:'left', padding:'6px 16px', fontSize:12, background: ciudadFiltro === c ? '#fff0f3' : 'none', color: ciudadFiltro === c ? '#af2245' : '#374151', border:'none', cursor:'pointer' }}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Edad */}
         <div style={{ marginBottom:8 }}>
           <div style={{ fontSize:11, color:'#9ca3af', marginBottom:4 }}>Edad: 18 – {edadMax} años</div>
           <input type="range" min={18} max={80} value={edadMax} onChange={e => setEdadMax(Number(e.target.value))} style={{ width:'100%' }} />
         </div>
+
+        {/* ¿Qué busca? */}
         <select value={busca} onChange={e => setBusca(e.target.value)}
           style={{ width:'100%', padding:'7px 10px', borderRadius:8, fontSize:12, border:'0.5px solid #e0bec1', background:'white', marginBottom:10, color: busca ? '#2A1840' : '#9ca3af' }}>
           <option value="">¿Qué busca?</option>
@@ -205,7 +240,8 @@ export default function ExplorarPage() {
           <option>Sin compromiso</option>
           <option>Relación seria</option>
         </select>
-        <button onClick={() => { cargarPerfiles(userId, miPerfil?.genero || ''); setSidebarOpen(false) }}
+
+        <button onClick={() => { cargarPerfiles(userId, generoBusca); setSidebarOpen(false) }}
           style={{ width:'100%', padding:'9px 0', borderRadius:20, border:'none', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', fontSize:12, fontWeight:600, cursor:'pointer', boxShadow:'0 4px 12px rgba(175,34,69,0.25)' }}>
           Buscar perfiles
         </button>
@@ -294,18 +330,21 @@ export default function ExplorarPage() {
       {perfilSeleccionado && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:100, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
           <div style={{ background:'white', borderRadius:16, width:'100%', maxWidth:400, maxHeight:'90vh', overflowY:'auto' }}>
-            <div style={{ position:'relative', height:300, background:'linear-gradient(160deg,#2A1840,#af2245)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <div style={{ position:'relative', height:300, background:'linear-gradient(160deg,#2A1840,#af2245)', display:'flex', alignItems:'flex-end', justifyContent:'center', paddingBottom:16 }}>
               {perfilSeleccionado.foto_url
-                ? <img src={perfilSeleccionado.foto_url} alt={perfilSeleccionado.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                ? <img src={perfilSeleccionado.foto_url} alt={perfilSeleccionado.alias} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }} />
                 : <div style={{ fontSize:60, color:'rgba(255,255,255,0.3)' }}><IconUser /></div>
               }
-              <button onClick={() => setPerfilSeleccionado(null)} style={{ position:'absolute', top:12, right:12, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:'50%', width:32, height:32, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#af2245' }}>
+              <div style={{ position:'relative', zIndex:10, background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', padding:'8px 16px', borderRadius:20, fontSize:13, fontWeight:600 }}>
+                {perfilSeleccionado.alias}
+              </div>
+              <button onClick={() => setPerfilSeleccionado(null)} style={{ position:'absolute', top:12, right:12, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:'50%', width:32, height:32, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#af2245', zIndex:20 }}>
                 <IconX />
               </button>
             </div>
 
             <div style={{ padding:20 }}>
-              <div style={{ fontSize:24, fontWeight:700, color:'#1f2937', marginBottom:4 }}>{perfilSeleccionado.alias}, {perfilSeleccionado.edad}</div>
+              <div style={{ fontSize:18, fontWeight:700, color:'#1f2937', marginBottom:8 }}>{perfilSeleccionado.edad} años</div>
               <div style={{ fontSize:14, color:'#9ca3af', marginBottom:16 }}>📍 {perfilSeleccionado.ciudad}</div>
 
               <div style={{ marginBottom:16, padding:12, background:'#f9f5f0', borderRadius:10 }}>
