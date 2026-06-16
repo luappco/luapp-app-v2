@@ -1,161 +1,133 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter, useSearchParams } from 'next/navigation'
 
-const paquetes = [
-  { id: '50', creditos: 50, precio: 4.99, nombre: '50 Créditos' },
-  { id: '150', creditos: 150, precio: 11.99, nombre: '150 Créditos', popular: true },
-  { id: '350', creditos: 350, precio: 24.99, nombre: '350 Créditos' },
-  { id: '800', creditos: 800, precio: 49.99, nombre: '800 Créditos' },
-]
+const LOGO = 'https://luapp.co/images/logo/logo-color.webp'
 
-function CreditosContent() {
-  const [creditos, setCreditos] = useState(0)
-  const [seleccionado, setSeleccionado] = useState('150')
-  const [cargando, setCargando] = useState(false)
-  const [mensaje, setMensaje] = useState('')
+const IconArrowLeft = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+const IconLogout = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+
+interface MiPerfil { id: string; alias: string; creditos: number }
+
+export default function CreditosPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const supabase = createClient()
 
-  useEffect(() => {
-    cargarCreditos()
-    const estado = searchParams.get('estado')
-    if (estado === 'ok') setMensaje('✅ Pago exitoso. Créditos agregados.')
-    if (estado === 'error') setMensaje('❌ Error en el pago. Intenta de nuevo.')
-  }, [])
+  const [miPerfil, setMiPerfil] = useState<MiPerfil | null>(null)
+  const [userId, setUserId] = useState('')
+  const [cargando, setCargando] = useState(true)
+  const [procesando, setProcesando] = useState(false)
 
-  const cargarCreditos = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push('/login'); return }
-    const { data } = await supabase
-      .from('usuarios').select('creditos').eq('id', user.id).single()
-    setCreditos(data?.creditos || 0)
+  useEffect(() => { init() }, [])
+
+  const init = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) { router.push('/login'); return }
+    const uid = session.user.id
+    setUserId(uid)
+    
+    const { data: p } = await supabase.from('usuarios').select('id, alias, creditos').eq('id', uid).single()
+    if (p) setMiPerfil({ id: p.id, alias: p.alias, creditos: p.creditos || 0 })
+    
+    setCargando(false)
   }
 
-  const comprar = async () => {
-    setCargando(true)
-    const res = await fetch('/api/pagos/mercadopago', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paquete: seleccionado })
-    })
-    const data = await res.json()
-    if (data.url) {
-      window.location.href = data.url
-    } else {
-      setMensaje('❌ Error. Intenta de nuevo.')
-      setCargando(false)
+  const comprarCreditos = async (cantidad: number, precio: number) => {
+    setProcesando(true)
+    try {
+      // Crear transacción en Supabase
+      const { data } = await supabase.from('transacciones').insert({
+        usuario_id: userId,
+        cantidad: cantidad,
+        monto: precio,
+        estado: 'pendiente',
+        metodo: 'mercadopago'
+      }).select().single()
+
+      // Redirigir a MercadoPago (simulado)
+      window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=LUAPP_${cantidad}_${userId}`
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error al procesar la compra')
     }
+    setProcesando(false)
   }
 
-  const pkg = paquetes.find(p => p.id === seleccionado)
+  const logout = async () => { await supabase.auth.signOut(); router.push('/login') }
+
+  if (cargando) return (
+    <div style={{ minHeight: '100vh', background: '#1a0f2e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 30, height: 30, border: '3px solid rgba(212,175,55,0.2)', borderTop: '3px solid #d4af37', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  )
+
+  const paquetes = [
+    { creditos: 50, precio: 4.99, desc: 'Básico' },
+    { creditos: 150, precio: 11.99, desc: 'Popular', popular: true },
+    { creditos: 350, precio: 24.99, desc: 'Premium' },
+    { creditos: 800, precio: 49.99, desc: 'VIP' }
+  ]
 
   return (
-    <div className="min-h-screen bg-[#fff8f1] flex flex-col max-w-md mx-auto pb-24">
-      <div className="px-5 pt-12 pb-4 flex items-center gap-3">
-        <button onClick={() => router.back()} className="text-gray-400 text-xl">←</button>
-        <h1 className="text-xl font-bold text-[#2A1840]">Comprar Créditos</h1>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg,#1a0f2e 0%,#241638 100%)', color: 'white', display: 'flex', flexDirection: 'column' }}>
+      {/* TOP BAR */}
+      <div style={{ background: 'rgba(26,15,46,0.85)', borderBottom: '1px solid rgba(212,175,55,0.22)', padding: '10px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <button onClick={() => router.push('/explorar')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#d4af37', padding: 2 }}>
+            {IconArrowLeft()}
+          </button>
+          <img src={LOGO} alt="LUAPP" style={{ height: 28, width: 'auto', filter: 'brightness(1.3)' }} />
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 8, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.22)' }}>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Créditos:</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#d4af37' }}>{miPerfil?.creditos}</span>
+          </div>
+          <button onClick={logout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', padding: 2 }}>
+            {IconLogout()}
+          </button>
+        </div>
       </div>
 
-      <div className="mx-4 p-5 rounded-2xl mb-5 text-white"
-        style={{ background: 'linear-gradient(135deg,#1e1b17,#2A1840)' }}>
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">🔥</span>
-          <div>
-            <div className="text-xs opacity-50 tracking-widest uppercase">Saldo actual</div>
-            <div className="text-3xl font-bold">{creditos} <span className="text-sm font-normal opacity-60">créditos</span></div>
+      {/* CONTENIDO */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+        <div style={{ maxWidth: 900, width: '100%' }}>
+          <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 12, textAlign: 'center' }}>Compra Créditos</h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', textAlign: 'center', marginBottom: 40 }}>Los créditos te permiten enviar mensajes a otros usuarios</p>
+
+          {/* SALDO ACTUAL */}
+          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 12, padding: 20, marginBottom: 40, textAlign: 'center' }}>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: 8 }}>SALDO ACTUAL</div>
+            <div style={{ fontSize: 48, fontWeight: 800, color: '#d4af37' }}>{miPerfil?.creditos}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 8 }}>créditos disponibles</div>
+          </div>
+
+          {/* PAQUETES */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 40 }}>
+            {paquetes.map((p, i) => (
+              <div key={i} style={{ background: p.popular ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.04)', border: p.popular ? '2px solid rgba(212,175,55,0.4)' : '1px solid rgba(212,175,55,0.22)', borderRadius: 12, padding: 16, position: 'relative', textAlign: 'center' }}>
+                {p.popular && <div style={{ position: 'absolute', top: -12, left: 0, right: 0, background: '#d4af37', color: '#1a0f2e', padding: '4px 12px', borderRadius: 4, fontSize: 10, fontWeight: 700, width: 'fit-content', margin: '0 auto' }}>⭐ MÁS POPULAR</div>}
+                
+                <div style={{ fontSize: 24, fontWeight: 800, color: 'white', marginBottom: 8, marginTop: p.popular ? 12 : 0 }}>{p.creditos}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 12 }}>créditos</div>
+                <div style={{ fontSize: 13, color: '#d4af37', fontWeight: 700, marginBottom: 14 }}>${p.precio}</div>
+                <button onClick={() => comprarCreditos(p.creditos, p.precio)} disabled={procesando} style={{ width: '100%', padding: '10px 0', background: p.popular ? 'linear-gradient(135deg,#af2245,#f07855)' : 'rgba(212,175,55,0.1)', color: p.popular ? 'white' : '#d4af37', border: p.popular ? 'none' : '1px solid rgba(212,175,55,0.3)', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700, transition: 'all 0.2s', opacity: procesando ? 0.6 : 1 }}>
+                  Comprar
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* INFO */}
+          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 12, padding: 20, textAlign: 'center' }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>🔒 Pago 100% seguro • No guardamos datos de tarjeta • Procesado por MercadoPago</div>
           </div>
         </div>
       </div>
-
-      {mensaje && (
-        <div className="mx-4 mb-4 p-3 rounded-xl bg-white border border-rose-100 text-sm text-center text-gray-600">
-          {mensaje}
-        </div>
-      )}
-
-      <div className="px-4 mb-5">
-        <p className="text-xs tracking-widest text-gray-400 uppercase mb-3">Elige tu paquete</p>
-        <div className="grid grid-cols-2 gap-3">
-          {paquetes.map(p => (
-            <button key={p.id}
-              onClick={() => setSeleccionado(p.id)}
-              className="relative p-4 rounded-2xl border-2 text-center transition-all"
-              style={{
-                borderColor: seleccionado === p.id ? '#af2245' : '#e0bec1',
-                background: seleccionado === p.id ? '#1e1b17' : 'white'
-              }}>
-              {p.popular && (
-                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-white text-xs px-3 py-0.5 rounded-full whitespace-nowrap"
-                  style={{ background: 'linear-gradient(135deg,#af2245,#f07855)' }}>
-                  ⭐ Popular
-                </div>
-              )}
-              <div className="text-2xl font-bold mb-0.5"
-                style={{ color: seleccionado === p.id ? 'white' : '#2A1840' }}>
-                {p.creditos}
-              </div>
-              <div className="text-xs mb-2"
-                style={{ color: seleccionado === p.id ? 'rgba(255,255,255,.5)' : '#8c7072' }}>
-                créditos
-              </div>
-              <div className="text-lg font-bold"
-                style={{ color: seleccionado === p.id ? '#F2C4CE' : '#af2245' }}>
-                ${p.precio}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="px-4">
-        <button onClick={comprar} disabled={cargando}
-          className="w-full text-white py-4 rounded-full font-medium tracking-widest uppercase text-xs disabled:opacity-50"
-          style={{ background: 'linear-gradient(135deg,#af2245,#f07855)',
-            boxShadow: '0 8px 24px rgba(175,34,69,.3)' }}>
-          {cargando ? 'Procesando...' : `Pagar $${pkg?.precio} USD`}
-        </button>
-        <p className="text-center text-xs text-gray-400 mt-3">
-          🔒 Pago seguro · No guardamos datos de tu tarjeta
-        </p>
-      </div>
-
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-rose-100 flex py-2 z-10">
-        <button onClick={() => router.push('/explorar')}
-          className="flex-1 flex flex-col items-center gap-0.5 text-gray-400">
-          <span className="text-lg">🔍</span>
-        </button>
-        <button onClick={() => router.push('/mensajes')}
-          className="flex-1 flex flex-col items-center gap-0.5 text-gray-400">
-          <span className="text-lg">💬</span>
-        </button>
-        <button onClick={() => router.push('/creditos')}
-          className="flex-1 flex flex-col items-center gap-0.5 text-[#af2245]">
-          <span className="text-lg">🔥</span>
-          <div className="w-1 h-1 rounded-full bg-[#af2245]"></div>
-        </button>
-        <button onClick={() => router.push('/perfil')}
-          className="flex-1 flex flex-col items-center gap-0.5 text-gray-400">
-          <span className="text-lg">👤</span>
-        </button>
-      </div>
     </div>
-  )
-}
-
-export default function CreditosPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#fff8f1] flex items-center justify-center">
-        <div className="text-4xl animate-pulse">🔥</div>
-      </div>
-    }>
-      <CreditosContent />
-    </Suspense>
   )
 }
