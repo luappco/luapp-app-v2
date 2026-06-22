@@ -65,9 +65,9 @@ export default function MensajesPage() {
         .single()
 
       if (usuario) {
-        const foto_url = usuario.foto_principal 
-          ? supabase.storage.from('fotos').getPublicUrl(usuario.foto_principal).data.publicUrl 
-          : null
+        const foto_url = usuario.foto_principal
+          ? supabase.storage.from('fotos').getPublicUrl(usuario.foto_principal).data.publicUrl
+          : undefined
 
         convos.push({
           matchId: match.id,
@@ -111,7 +111,7 @@ export default function MensajesPage() {
       {/* Buscador */}
       <div style={{ background:'white', borderBottom:'0.5px solid #f0d4d8', padding:'12px 16px' }}>
         <div style={{ position:'relative' }}>
-          <IconSearch style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#9ca3af' }} />
+          <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#9ca3af', display:'flex' }}><IconSearch /></span>
           <input
             type="text"
             placeholder="Buscar conversación..."
@@ -145,7 +145,7 @@ export default function MensajesPage() {
                 <div style={{ width:'100%', height:'100%', borderRadius:'50%', background:'linear-gradient(135deg,#af2245,#f07855)', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
                   {convo.foto_url
                     ? <img src={convo.foto_url} alt={convo.alias} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                    : <IconUser style={{ color:'white' }} />
+                    : <span style={{ color:'white', display:'flex' }}><IconUser /></span>
                   }
                 </div>
                 <span style={{ position:'absolute', bottom:0, right:0, width:12, height:12, borderRadius:'50%', background:'#22c55e', border:'2px solid white' }} />
