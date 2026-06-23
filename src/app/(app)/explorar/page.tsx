@@ -297,6 +297,9 @@ export default function ExplorarPage() {
         <button onClick={()=>router.push('/creditos')} style={{ background:'rgba(175,34,69,0.2)', border:'1px solid rgba(175,34,69,0.4)', borderRadius:20, padding:'6px 16px', fontSize:12, color:'#f07855', display:'inline-flex', alignItems:'center', gap:6, cursor:'pointer', fontWeight:600 }}>
           <IconFlame /> {miPerfil?.creditos} créditos
         </button>
+        <button onClick={()=>router.push('/perfil')} style={{ marginTop:10, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:20, padding:'5px 14px', fontSize:11, color:'rgba(255,255,255,0.8)', display:'inline-flex', alignItems:'center', gap:5, cursor:'pointer', fontWeight:500 }}>
+          <IconUser size={12} /> Ver mi perfil
+        </button>
       </div>
 
       <div style={{ background:'white', borderRadius:16, padding:16, border:'1px solid #f0d4d8' }}>
