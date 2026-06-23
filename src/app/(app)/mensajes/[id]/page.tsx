@@ -85,21 +85,25 @@ export default function ChatPage() {
 
     setCargando(false)
 
-    // Suscribirse a nuevos mensajes en tiempo real
-    if (match) {
-      const sub = supabase
-        .channel(`chat_${match.id}`)
-        .on('postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'mensajes', filter: `match_id=eq.${match.id}` },
-          (payload: any) => {
-            setMensajes(prev => [...prev, payload.new as Mensaje])
-          }
-        )
-        .subscribe()
-
-      return () => { sub.unsubscribe() }
-    }
   }
+
+  useEffect(() => {
+    if (!matchId) return
+    const sub = supabase
+      .channel(`chat_${matchId}`)
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'mensajes', filter: `match_id=eq.${matchId}` },
+        (payload: any) => {
+          setMensajes(prev => {
+            if (prev.find(m => m.id === payload.new.id)) return prev
+            return [...prev, payload.new as Mensaje]
+          })
+          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+        }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(sub) }
+  }, [matchId])
 
   const cargarMensajes = async (mid: string) => {
     const { data } = await supabase.from('mensajes')
