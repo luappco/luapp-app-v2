@@ -22,6 +22,21 @@ export default function CreditosPage() {
 
   useEffect(() => { init() }, [])
 
+  // Mostrar resultado del pago al volver de PayPal
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('exito')) {
+      const c = params.get('creditos')
+      alert(`Pago exitoso. Se agregaron ${c} créditos a tu cuenta.`)
+      window.history.replaceState({}, '', '/creditos')
+    } else if (params.get('error')) {
+      alert('Hubo un error con el pago. Intenta de nuevo.')
+      window.history.replaceState({}, '', '/creditos')
+    } else if (params.get('cancelado')) {
+      window.history.replaceState({}, '', '/creditos')
+    }
+  }, [])
+
   const init = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session?.user) { router.push('/login'); return }
@@ -51,20 +66,22 @@ export default function CreditosPage() {
     return () => { supabase.removeChannel(sub) }
   }, [userId])
 
-  const comprarCreditos = async (cantidad: number, precio: number) => {
+  const comprarCreditos = async (paquete: string) => {
     setProcesando(true)
     try {
-      const { data } = await supabase.from('transacciones').insert({
-        usuario_id: userId,
-        cantidad: cantidad,
-        monto: precio,
-        estado: 'pendiente',
-        metodo: 'mercadopago'
-      }).select().single()
-
-      window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=LUAPP_${cantidad}_${userId}`
+      const res = await fetch('/api/pagos/paypal/crear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paquete }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert('Error al conectar con PayPal. Intenta de nuevo.')
+      }
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error PayPal:', error)
       alert('Error al procesar la compra')
     }
     setProcesando(false)
@@ -153,8 +170,8 @@ export default function CreditosPage() {
                     <div style={{ fontSize: 24, fontWeight: 800, color: 'white', marginBottom: 8, marginTop: p.popular ? 12 : 0 }}>{p.creditos}</div>
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 12 }}>créditos</div>
                     <div style={{ fontSize: 13, color: '#d4af37', fontWeight: 700, marginBottom: 14 }}>${p.precio}</div>
-                    <button onClick={() => comprarCreditos(p.creditos, p.precio)} disabled={procesando} style={{ width: '100%', padding: '10px 0', background: p.popular ? 'linear-gradient(135deg,#af2245,#f07855)' : 'rgba(212,175,55,0.1)', color: p.popular ? 'white' : '#d4af37', border: p.popular ? 'none' : '1px solid rgba(212,175,55,0.3)', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700, transition: 'all 0.2s', opacity: procesando ? 0.6 : 1 }}>
-                      Comprar
+                    <button onClick={() => comprarCreditos(String(p.creditos))} disabled={procesando} style={{ width: '100%', padding: '10px 0', background: p.popular ? 'linear-gradient(135deg,#af2245,#f07855)' : 'rgba(212,175,55,0.1)', color: p.popular ? 'white' : '#d4af37', border: p.popular ? 'none' : '1px solid rgba(212,175,55,0.3)', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700, transition: 'all 0.2s', opacity: procesando ? 0.6 : 1 }}>
+                      {procesando ? 'Procesando...' : 'Comprar con PayPal'}
                     </button>
                   </div>
                 ))}
@@ -162,7 +179,11 @@ export default function CreditosPage() {
 
               {/* INFO */}
               <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 12, padding: 20, textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>🔒 Pago 100% seguro • No guardamos datos de tarjeta • Procesado por MercadoPago</div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, flexWrap:'wrap' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.55)' }}>Pago 100% seguro · No guardamos datos de tarjeta · Procesado por</span>
+                  <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_37x23.jpg" alt="PayPal" style={{ height:18, borderRadius:3 }} />
+                </div>
               </div>
             </>
           )}
