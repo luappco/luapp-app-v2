@@ -91,6 +91,7 @@ export default function ExplorarPage() {
         cargarNuevos(user.id, gb),
         cargarConectados(user.id, gb),
         cargarVisitantes(user.id),
+        cargarPerfilesInicial(user.id, gb),
       ])
     }
     setCargando(false)
@@ -136,6 +137,13 @@ export default function ExplorarPage() {
       .select('id,alias,edad,ciudad,foto_principal,ultimo_acceso,bio,estado_civil')
       .in('id', fl.map(f => f.de_usuario))
     if (data) setFlechazosRec(data.map(toUsuario))
+  }
+
+  const cargarPerfilesInicial = async (uid: string, gb: string) => {
+    const { data } = await supabase.from('usuarios')
+      .select('id,alias,edad,ciudad,busca,foto_principal,bio,estado_civil,orientacion_sexual,silueta,talla,verificado,premium,ultimo_acceso,relacion_buscada,personalidad')
+      .neq('id', uid).eq('genero', gb).limit(60)
+    if (data) setPerfiles(data.map(toUsuario))
   }
 
   const cargarPerfiles = async () => {
@@ -409,9 +417,8 @@ export default function ExplorarPage() {
             {perfiles.length === 0 ? (
               <div style={{ padding:'50px 20px', textAlign:'center', color:'#9ca3af' }}>
                 <div style={{ width:52, height:52, borderRadius:'50%', background:'#f3f4f6', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px' }}><IconSearch /></div>
-                <div style={{ fontSize:15, fontWeight:600, color:'#374151', marginBottom:6 }}>Usa los filtros para buscar</div>
-                <div style={{ fontSize:13, marginBottom:20 }}>Ajusta los filtros y presiona Buscar perfiles</div>
-                <button onClick={cargarPerfiles} style={{ padding:'10px 24px', borderRadius:20, border:'none', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', fontSize:13, fontWeight:600, cursor:'pointer' }}>Buscar ahora</button>
+                <div style={{ fontSize:15, fontWeight:600, color:'#374151', marginBottom:6 }}>Sin perfiles disponibles</div>
+                <div style={{ fontSize:13 }}>Ajusta los filtros para ver más resultados</div>
               </div>
             ) : (
               <div className="profiles-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>
