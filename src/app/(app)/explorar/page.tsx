@@ -173,12 +173,20 @@ export default function ExplorarPage() {
     if (flechazosEnviados.has(targetId)) return
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { data: c } = await supabase.from('usuarios').select('creditos').eq('id', user.id).single()
-    if (!c || c.creditos < 1) { router.push('/creditos'); return }
-    await supabase.from('flechazos').insert({ de_usuario: user.id, a_usuario: targetId })
-    await supabase.rpc('sumar_creditos', { uid: user.id, monto: -1 })
+
+    // Solo hombres pagan créditos
+    if (miPerfil?.genero?.toLowerCase() === 'hombre') {
+      const { data: c } = await supabase.from('usuarios').select('creditos').eq('id', user.id).single()
+      if (!c || c.creditos < 1) { router.push('/creditos'); return }
+      await supabase.rpc('sumar_creditos', { uid: user.id, monto: -1 })
+      setMiPerfil(prev => prev ? { ...prev, creditos: prev.creditos - 1 } : prev)
+    }
+
+    const { error } = await supabase.from('flechazos').insert({ de_usuario: user.id, a_usuario: targetId })
+    if (error) { console.error('Error flechazo:', error); return }
     setFlechazosEnviados(prev => new Set([...prev, targetId]))
-    setMiPerfil(prev => prev ? { ...prev, creditos: prev.creditos - 1 } : prev)
+
+    // Verificar match mutuo
     const { data: mutuo } = await supabase.from('flechazos').select('id').eq('de_usuario', targetId).eq('a_usuario', user.id).single()
     if (mutuo) {
       const u1 = user.id < targetId ? user.id : targetId
@@ -560,11 +568,22 @@ export default function ExplorarPage() {
 
               <div style={{ display:'flex', gap:10 }}>
                 {tieneMatch ? (
-                  <button onClick={()=>router.push(`/mensajes/${perfilSel.id}`)} style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:12, fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><IconMessage /> Enviar mensaje</button>
+                  <button onClick={()=>router.push(`/mensajes/${perfilSel.id}`)} style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:12, fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><IconMessage /> Chatear</button>
                 ) : (
-                  <button onClick={()=>darFlechazo(perfilSel.id)} style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:12, fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><IconHeart size={16} /> Me interesa</button>
+                  <>
+                    <button onClick={()=>darFlechazo(perfilSel.id)} style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:12, fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                      <IconHeart size={16} /> {flechazosEnviados.has(perfilSel.id) ? 'Flechazo enviado' : 'Me interesa'}
+                    </button>
+                    {flechazosEnviados.has(perfilSel.id) && (
+                      <div style={{ flex:1, padding:'12px 0', background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:12, fontSize:12, fontWeight:600, color:'#16a34a', display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center' }}>
+                        Espera que te devuelva el flechazo
+                      </div>
+                    )}
+                  </>
                 )}
-                <button onClick={()=>setPerfilSel(null)} style={{ flex:1, padding:'12px 0', background:'#f3f4f6', color:'#6b7280', border:'none', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer' }}>Pasar</button>
+                {!flechazosEnviados.has(perfilSel.id) && !tieneMatch && (
+                  <button onClick={()=>setPerfilSel(null)} style={{ flex:1, padding:'12px 0', background:'#f3f4f6', color:'#6b7280', border:'none', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer' }}>Pasar</button>
+                )}
               </div>
             </div>
           </div>
