@@ -118,6 +118,17 @@ export default function ChatPage() {
     if (!nuevoMensaje.trim() || !matchId) return
     setEnviando(true)
 
+    // Verificar créditos si es hombre
+    const { data: perfil } = await supabase.from('usuarios').select('genero, creditos').eq('id', userId).single()
+    if (perfil?.genero?.toLowerCase() === 'hombre') {
+      if (!perfil.creditos || perfil.creditos < 1) {
+        router.push('/creditos')
+        setEnviando(false)
+        return
+      }
+      await supabase.rpc('sumar_creditos', { p_usuario_id: userId, p_creditos: -1 })
+    }
+
     const { error } = await supabase.from('mensajes').insert({
       match_id: matchId,
       remitente_id: userId,

@@ -197,6 +197,20 @@ export default function ExplorarPage() {
     }
   }
 
+  const iniciarChat = async (targetId: string) => {
+    // Crear match si no existe (hombre con créditos puede iniciar chat directo)
+    const { data: matchExiste } = await supabase.from('matches').select('id')
+      .or(`and(usuario1.eq.${userId},usuario2.eq.${targetId}),and(usuario1.eq.${targetId},usuario2.eq.${userId})`)
+      .single()
+    if (!matchExiste) {
+      const u1 = userId < targetId ? userId : targetId
+      const u2 = userId < targetId ? targetId : userId
+      await supabase.from('matches').insert({ usuario1: u1, usuario2: u2 })
+    }
+    setPerfilSel(null)
+    router.push(`/mensajes/${targetId}`)
+  }
+
   const abrirPerfil = async (u: Usuario) => {
     setPerfilSel(u)
     verificarMatch(u.id)
@@ -566,23 +580,51 @@ export default function ExplorarPage() {
                 </div>
               )}
 
-              <div style={{ display:'flex', gap:10 }}>
-                {tieneMatch ? (
-                  <button onClick={()=>router.push(`/mensajes/${perfilSel.id}`)} style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:12, fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><IconMessage /> Chatear</button>
-                ) : (
-                  <>
-                    <button onClick={()=>darFlechazo(perfilSel.id)} style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:12, fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-                      <IconHeart size={16} /> {flechazosEnviados.has(perfilSel.id) ? 'Flechazo enviado' : 'Me interesa'}
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                <div style={{ display:'flex', gap:10 }}>
+                  {/* Botón chat — siempre visible para hombres con créditos */}
+                  {miPerfil?.genero?.toLowerCase() === 'hombre' ? (
+                    miPerfil.creditos > 0 ? (
+                      <button onClick={()=>iniciarChat(perfilSel.id)}
+                        style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:12, fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                        <IconMessage /> Chatear
+                      </button>
+                    ) : (
+                      <button onClick={()=>router.push('/creditos')}
+                        style={{ flex:1, padding:'12px 0', background:'#f3f4f6', color:'#9ca3af', border:'1.5px solid #e5e7eb', borderRadius:12, fontSize:13, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                        <IconMessage size={16} /> Sin créditos para chatear
+                      </button>
+                    )
+                  ) : (
+                    /* Mujeres: chat gratis si hay match, flechazo si no */
+                    tieneMatch ? (
+                      <button onClick={()=>router.push(`/mensajes/${perfilSel.id}`)}
+                        style={{ flex:1, padding:'12px 0', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', border:'none', borderRadius:12, fontSize:14, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                        <IconMessage /> Chatear
+                      </button>
+                    ) : null
+                  )}
+
+                  {/* Botón flechazo */}
+                  {!tieneMatch && (
+                    <button onClick={()=>darFlechazo(perfilSel.id)}
+                      style={{ flex:1, padding:'12px 0', background: flechazosEnviados.has(perfilSel.id) ? '#f9f5f0' : 'white', color: flechazosEnviados.has(perfilSel.id) ? '#af2245' : '#374151', border:'1.5px solid', borderColor: flechazosEnviados.has(perfilSel.id) ? '#af2245' : '#e5e7eb', borderRadius:12, fontSize:13, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                      <IconHeart size={14} filled={flechazosEnviados.has(perfilSel.id)} />
+                      {flechazosEnviados.has(perfilSel.id) ? 'Flechazo enviado' : 'Me interesa'}
                     </button>
-                    {flechazosEnviados.has(perfilSel.id) && (
-                      <div style={{ flex:1, padding:'12px 0', background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:12, fontSize:12, fontWeight:600, color:'#16a34a', display:'flex', alignItems:'center', justifyContent:'center', textAlign:'center' }}>
-                        Espera que te devuelva el flechazo
-                      </div>
-                    )}
-                  </>
-                )}
-                {!flechazosEnviados.has(perfilSel.id) && !tieneMatch && (
-                  <button onClick={()=>setPerfilSel(null)} style={{ flex:1, padding:'12px 0', background:'#f3f4f6', color:'#6b7280', border:'none', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer' }}>Pasar</button>
+                  )}
+
+                  <button onClick={()=>setPerfilSel(null)}
+                    style={{ padding:'12px 16px', background:'#f3f4f6', color:'#6b7280', border:'none', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer' }}>
+                    Pasar
+                  </button>
+                </div>
+
+                {/* Info créditos */}
+                {miPerfil?.genero?.toLowerCase() === 'hombre' && miPerfil.creditos > 0 && (
+                  <div style={{ fontSize:11, color:'#9ca3af', textAlign:'center' }}>
+                    Cada mensaje consume 1 crédito · Tienes {miPerfil.creditos} créditos
+                  </div>
                 )}
               </div>
             </div>
