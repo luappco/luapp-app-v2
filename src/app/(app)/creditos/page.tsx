@@ -27,12 +27,29 @@ export default function CreditosPage() {
     if (!session?.user) { router.push('/login'); return }
     const uid = session.user.id
     setUserId(uid)
-    
-    const { data: p } = await supabase.from('usuarios').select('id, alias, creditos, genero').eq('id', uid).single()
-    if (p) setMiPerfil({ id: p.id, alias: p.alias, creditos: p.creditos || 0, genero: p.genero })
-    
+    await cargarCreditos(uid)
     setCargando(false)
   }
+
+  const cargarCreditos = async (uid: string) => {
+    const { data: p } = await supabase.from('usuarios').select('id, alias, creditos, genero').eq('id', uid).single()
+    if (p) setMiPerfil({ id: p.id, alias: p.alias, creditos: p.creditos || 0, genero: p.genero })
+  }
+
+  // Suscribir a cambios de créditos en tiempo real
+  useEffect(() => {
+    if (!userId) return
+    const sub = supabase
+      .channel(`creditos_${userId}`)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'usuarios', filter: `id=eq.${userId}` },
+        (payload: any) => {
+          setMiPerfil(prev => prev ? { ...prev, creditos: payload.new.creditos } : prev)
+        }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(sub) }
+  }, [userId])
 
   const comprarCreditos = async (cantidad: number, precio: number) => {
     setProcesando(true)
