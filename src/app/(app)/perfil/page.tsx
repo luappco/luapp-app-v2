@@ -171,7 +171,7 @@ export default function PerfilPage() {
   )
 
   const GaleriaFotos = ({ fotos, urls, privada }: { fotos: string[]; urls: string[]; privada: boolean }) => (
-    <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:8 }}>
+    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(80px, 1fr))', gap:8 }}>
       {urls.map((url, i) => {
         const path = fotos[i]
         const esPrincipal = !privada && usuario?.foto_principal === path
@@ -212,7 +212,14 @@ export default function PerfilPage() {
 
   return (
     <div style={{ minHeight:'100vh', background:'#fff8f1', paddingBottom:90 }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} *{box-sizing:border-box}`}</style>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        *{box-sizing:border-box}
+        @media(max-width:768px){
+          .perfil-grid{grid-template-columns:1fr!important}
+          .perfil-foto{max-width:340px;margin:0 auto}
+        }
+      `}</style>
 
       {/* Top bar */}
       <div style={{ background:'white', borderBottom:'1px solid #f0d4d8', padding:'10px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:30, boxShadow:'0 1px 6px rgba(0,0,0,0.04)' }}>
@@ -231,12 +238,12 @@ export default function PerfilPage() {
       </div>
 
       <div style={{ maxWidth:960, margin:'0 auto', padding:'20px 16px' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'300px 1fr', gap:16, alignItems:'start' }}>
+        <div className="perfil-grid" style={{ display:'grid', gridTemplateColumns:'300px 1fr', gap:16, alignItems:'start' }}>
 
           {/* ── Columna izquierda ── */}
           <div>
             {/* Foto principal */}
-            <div style={{ position:'relative', borderRadius:16, overflow:'hidden', background:'#1e1b17', aspectRatio:'3/4', marginBottom:12 }}>
+            <div className="perfil-foto" style={{ position:'relative', borderRadius:16, overflow:'hidden', background:'#1e1b17', aspectRatio:'3/4', marginBottom:12 }}>
               {fotoActual
                 ? <img src={fotoActual} alt="foto" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
                 : <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:10, color:'rgba(255,255,255,0.25)' }}>
@@ -346,7 +353,7 @@ export default function PerfilPage() {
             {/* Datos personales */}
             <div style={card}>
               <div style={secTit}><IconUser /> Datos personales</div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 24px' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:'0 24px' }}>
                 <div>
                   <Fila l="Ciudad"            v={usuario?.ciudad} />
                   <Fila l="Región"            v={usuario?.region} />
