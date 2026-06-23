@@ -174,10 +174,22 @@ export default function ExplorarPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    // Solo hombres pagan créditos
-    if (miPerfil?.genero?.toLowerCase() === 'hombre') {
+    // Contar flechazos enviados hoy
+    const hoy = new Date(); hoy.setHours(0,0,0,0)
+    const { count: flechazosHoy } = await supabase.from('flechazos')
+      .select('*', { count: 'exact', head: true })
+      .eq('de_usuario', user.id)
+      .gte('created_at', hoy.toISOString())
+
+    const LIMITE_DIARIO = 10
+    if ((flechazosHoy || 0) >= LIMITE_DIARIO) {
+      // Superó el límite — necesita créditos
       const { data: c } = await supabase.from('usuarios').select('creditos').eq('id', user.id).single()
-      if (!c || c.creditos < 1) { router.push('/creditos'); return }
+      if (!c || c.creditos < 1) {
+        alert(`Alcanzaste el límite de ${LIMITE_DIARIO} flechazos gratis hoy. Compra créditos para enviar más.`)
+        router.push('/creditos')
+        return
+      }
       await supabase.rpc('sumar_creditos', { p_usuario_id: user.id, p_creditos: -1 })
       setMiPerfil(prev => prev ? { ...prev, creditos: prev.creditos - 1 } : prev)
     }
