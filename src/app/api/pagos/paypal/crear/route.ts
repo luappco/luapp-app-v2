@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
         }],
         application_context: {
           brand_name: 'LUAPP',
-          landing_page: 'BILLING',
+          landing_page: 'NO_PREFERENCE',
+          shipping_preference: 'NO_SHIPPING',
           user_action: 'PAY_NOW',
           return_url: `${base}/api/pagos/paypal/confirmar`,
           cancel_url: `${base}/creditos?cancelado=1`,
