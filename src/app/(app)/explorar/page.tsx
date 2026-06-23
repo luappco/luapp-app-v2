@@ -178,7 +178,7 @@ export default function ExplorarPage() {
     if (miPerfil?.genero?.toLowerCase() === 'hombre') {
       const { data: c } = await supabase.from('usuarios').select('creditos').eq('id', user.id).single()
       if (!c || c.creditos < 1) { router.push('/creditos'); return }
-      await supabase.rpc('sumar_creditos', { uid: user.id, monto: -1 })
+      await supabase.rpc('sumar_creditos', { p_usuario_id: user.id, p_creditos: -1 })
       setMiPerfil(prev => prev ? { ...prev, creditos: prev.creditos - 1 } : prev)
     }
 
