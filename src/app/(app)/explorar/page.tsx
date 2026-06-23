@@ -358,21 +358,23 @@ export default function ExplorarPage() {
 
         {/* 5. Edad */}
         <div style={{ marginBottom:12 }}>
-          <label style={{ fontSize:11, color:'#6b7280', fontWeight:600, display:'block', marginBottom:6 }}>Edad: {edadMin} – {edadMax} años</label>
-          <div style={{ position:'relative', height:20, marginBottom:8 }}>
-            <div style={{ position:'absolute', top:'50%', left:0, right:0, height:4, background:'#e5e7eb', borderRadius:2, transform:'translateY(-50%)' }} />
-            <div style={{ position:'absolute', top:'50%', height:4, background:'linear-gradient(135deg,#af2245,#f07855)', borderRadius:2, transform:'translateY(-50%)', left:`${(edadMin-18)/(80-18)*100}%`, right:`${100-(edadMax-18)/(80-18)*100}%` }} />
-            <input type="range" min="18" max="80" value={edadMin}
-              onChange={e => setEdadMin(Math.min(Number(e.target.value), edadMax - 1))}
-              style={{ position:'absolute', width:'100%', height:'100%', opacity:0, cursor:'pointer', zIndex:2 }} />
-            <input type="range" min="18" max="80" value={edadMax}
-              onChange={e => setEdadMax(Math.max(Number(e.target.value), edadMin + 1))}
-              style={{ position:'absolute', width:'100%', height:'100%', opacity:0, cursor:'pointer', zIndex:2 }} />
-            <div style={{ position:'absolute', top:'50%', transform:`translateX(-50%) translateY(-50%)`, left:`${(edadMin-18)/(80-18)*100}%`, width:16, height:16, borderRadius:'50%', background:'#af2245', boxShadow:'0 1px 4px rgba(0,0,0,0.2)', pointerEvents:'none' }} />
-            <div style={{ position:'absolute', top:'50%', transform:`translateX(-50%) translateY(-50%)`, left:`${(edadMax-18)/(80-18)*100}%`, width:16, height:16, borderRadius:'50%', background:'#af2245', boxShadow:'0 1px 4px rgba(0,0,0,0.2)', pointerEvents:'none' }} />
-          </div>
-          <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'#9ca3af' }}>
-            <span>{edadMin} años</span><span>{edadMax} años</span>
+          <label style={{ fontSize:11, color:'#6b7280', fontWeight:600, display:'block', marginBottom:6 }}>Edad</label>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:10, color:'#9ca3af', marginBottom:3 }}>Desde</div>
+              <select value={edadMin} onChange={e => setEdadMin(Math.min(Number(e.target.value), edadMax - 1))}
+                style={{ width:'100%', padding:'8px 10px', borderRadius:8, border:'1.5px solid #e5e7eb', background:'white', fontSize:13, color:'#1f2937', outline:'none', cursor:'pointer' }}>
+                {Array.from({length:63},(_,i)=>i+18).map(n => <option key={n} value={n}>{n} años</option>)}
+              </select>
+            </div>
+            <div style={{ color:'#9ca3af', fontSize:14, paddingTop:16 }}>—</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:10, color:'#9ca3af', marginBottom:3 }}>Hasta</div>
+              <select value={edadMax} onChange={e => setEdadMax(Math.max(Number(e.target.value), edadMin + 1))}
+                style={{ width:'100%', padding:'8px 10px', borderRadius:8, border:'1.5px solid #e5e7eb', background:'white', fontSize:13, color:'#1f2937', outline:'none', cursor:'pointer' }}>
+                {Array.from({length:63},(_,i)=>i+18).map(n => <option key={n} value={n}>{n} años</option>)}
+              </select>
+            </div>
           </div>
         </div>
 
