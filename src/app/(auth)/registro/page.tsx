@@ -5,175 +5,191 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
+const LOGO = 'https://luapp.co/images/logo/logo-color.webp'
+
+const PAISES_CIUDADES: Record<string, string[]> = {
+  'México':       ['Ciudad de México','Guadalajara','Monterrey','Cancún','Puebla','Tijuana','León','Juárez','Torreón','San Luis Potosí','Mérida','Querétaro','Aguascalientes','Acapulco','Veracruz','Chihuahua','Hermosillo','Culiacán','Mazatlán','Oaxaca','Tuxtla Gutiérrez','Morelia'],
+  'Colombia':     ['Bogotá','Medellín','Cali','Barranquilla','Cartagena','Bucaramanga','Pereira','Santa Marta','Manizales','Ibagué','Cúcuta','Armenia','Villavicencio','Pasto','Montería','Neiva','Sincelejo','Valledupar','Popayán'],
+  'Argentina':    ['Buenos Aires','Córdoba','Rosario','Mendoza','La Plata','Tucumán','Mar del Plata','Salta','Santa Fe','San Juan','Neuquén','Bahía Blanca'],
+  'España':       ['Madrid','Barcelona','Valencia','Sevilla','Zaragoza','Málaga','Murcia','Palma','Las Palmas','Bilbao','Alicante','Córdoba','Valladolid','Vigo','Gijón','Granada','Tenerife'],
+  'Chile':        ['Santiago','Valparaíso','Concepción','Antofagasta','Viña del Mar','La Serena','Temuco','Rancagua','Puerto Montt','Iquique','Arica','Talca'],
+  'Perú':         ['Lima','Arequipa','Cusco','Trujillo','Chiclayo','Piura','Iquitos','Huancayo','Tacna'],
+  'Venezuela':    ['Caracas','Maracaibo','Valencia','Barquisimeto','Maracay','Ciudad Guayana','San Cristóbal','Maturín'],
+  'Ecuador':      ['Guayaquil','Quito','Cuenca','Ambato','Manta','Portoviejo','Loja','Esmeraldas'],
+  'Bolivia':      ['La Paz','Santa Cruz de la Sierra','Cochabamba','Oruro','Sucre','Potosí','Tarija'],
+  'Paraguay':     ['Asunción','Ciudad del Este','San Lorenzo','Luque','Capiatá'],
+  'Uruguay':      ['Montevideo','Salto','Ciudad de la Costa','Paysandú','Las Piedras','Maldonado'],
+  'Brasil':       ['São Paulo','Río de Janeiro','Brasília','Salvador','Fortaleza','Belo Horizonte','Manaus','Curitiba','Recife','Porto Alegre'],
+  'Guatemala':    ['Ciudad de Guatemala','Mixco','Villa Nueva','Quetzaltenango','Escuintla'],
+  'Costa Rica':   ['San José','Alajuela','Heredia','Liberia','Cartago','Puntarenas'],
+  'Panamá':       ['Ciudad de Panamá','San Miguelito','David','La Chorrera','Colón'],
+  'Honduras':     ['Tegucigalpa','San Pedro Sula','La Ceiba','El Progreso','Comayagua'],
+  'El Salvador':  ['San Salvador','Soyapango','Santa Ana','San Miguel','Mejicanos'],
+  'Nicaragua':    ['Managua','León','Masaya','Chinandega','Matagalpa'],
+  'República Dominicana': ['Santo Domingo','Santiago de los Caballeros','La Romana','San Pedro de Macorís','Puerto Plata'],
+  'Cuba':         ['La Habana','Santiago de Cuba','Camagüey','Holguín','Santa Clara'],
+  'Puerto Rico':  ['San Juan','Bayamón','Carolina','Ponce','Caguas'],
+  'Estados Unidos': ['Miami','Nueva York','Los Ángeles','Chicago','Houston','Dallas','Phoenix','San Diego','Las Vegas','Orlando','Atlanta'],
+  'Portugal':     ['Lisboa','Oporto','Amadora','Braga','Setúbal','Coimbra','Funchal'],
+  'Francia':      ['París','Marsella','Lyon','Toulouse','Niza','Nantes','Burdeos'],
+  'Italia':       ['Roma','Milán','Nápoles','Turín','Palermo','Florencia','Venecia'],
+  'Alemania':     ['Berlín','Hamburgo','Múnich','Colonia','Fráncfort','Stuttgart'],
+  'Reino Unido':  ['Londres','Birmingham','Leeds','Glasgow','Mánchester','Liverpool'],
+  'Canadá':       ['Toronto','Montreal','Vancouver','Calgary','Edmonton','Ottawa'],
+  'Australia':    ['Sídney','Melbourne','Brisbane','Perth','Adelaida','Canberra'],
+}
+
+const inp = "w-full px-4 py-3 rounded-2xl border border-gray-200 text-sm outline-none focus:border-[#af2245] bg-white"
+
 export default function RegistroPage() {
   const [cargando, setCargando] = useState(false)
-  const [error, setError] = useState('')
-  const [form, setForm] = useState({
-    alias: '', email: '', password: '', confirmar: '',
-    genero: 'mujer', busca: 'hombre', ciudad: '', edad: ''
-  })
-  const router = useRouter()
+  const [error, setError]       = useState('')
+  const router  = useRouter()
   const supabase = createClient()
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
+  const [alias, setAlias]       = useState('')
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmar, setConfirmar] = useState('')
+  const [pais, setPais]         = useState('México')
+  const [ciudad, setCiudad]     = useState('')
+  const [edad, setEdad]         = useState('')
+  const [genero, setGenero]     = useState('mujer')
+  const [busca, setBusca]       = useState('hombre')
 
   const registrar = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (form.password !== form.confirmar) {
-      setError('Las contraseñas no coinciden.')
-      return
-    }
-    if (form.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.')
-      return
-    }
-    setCargando(true)
-    setError('')
+    if (password !== confirmar) { setError('Las contraseñas no coinciden.'); return }
+    if (password.length < 6)   { setError('La contraseña debe tener al menos 6 caracteres.'); return }
+    if (!ciudad)               { setError('Selecciona tu ciudad.'); return }
+    setCargando(true); setError('')
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-    })
-
-    if (signUpError) {
-      setError('Error creando cuenta. Intenta de nuevo.')
-      setCargando(false)
-      return
-    }
+    const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
+    if (signUpError) { setError('Error creando cuenta. Intenta de nuevo.'); setCargando(false); return }
 
     if (data.user) {
       const { error: insertError } = await supabase.from('usuarios').insert({
         id: data.user.id,
-        alias: form.alias,
-        email: form.email,
-        genero: form.genero,
-        busca: form.busca,
-        ciudad: form.ciudad,
-        edad: parseInt(form.edad),
+        alias, email, genero, busca,
+        pais, ciudad,
+        edad: parseInt(edad),
         creditos: 0,
       })
-
-      if (insertError) {
-        setError('Error creando perfil. Intenta de nuevo.')
-        setCargando(false)
-        return
-      }
-
+      if (insertError) { setError('Error creando perfil. Intenta de nuevo.'); setCargando(false); return }
       router.push('/explorar')
     }
     setCargando(false)
   }
 
+  const ciudadesPais = PAISES_CIUDADES[pais] || []
+
+  const btnGenero = (val: string, label: string) => (
+    <button type="button" onClick={() => setGenero(val)}
+      className="flex-1 py-3 rounded-2xl border text-sm font-medium transition-all"
+      style={{ background: genero === val ? 'linear-gradient(135deg,#af2245,#f07855)' : 'white', color: genero === val ? 'white' : '#6b7280', borderColor: genero === val ? 'transparent' : '#e5e7eb' }}>
+      {label}
+    </button>
+  )
+
+  const btnBusca = (val: string, label: string) => (
+    <button type="button" onClick={() => setBusca(val)}
+      className="flex-1 py-2.5 rounded-2xl border text-xs font-medium transition-all"
+      style={{ background: busca === val ? 'linear-gradient(135deg,#af2245,#f07855)' : 'white', color: busca === val ? 'white' : '#6b7280', borderColor: busca === val ? 'transparent' : '#e5e7eb' }}>
+      {label}
+    </button>
+  )
+
   return (
-    <div className="min-h-screen bg-[#fff8f1] flex flex-col items-center justify-center px-6 py-10">
-      <div className="mb-8 text-center">
-        <div className="text-5xl mb-3">🔥</div>
-        <h1 className="text-3xl font-bold" style={{
-          background: 'linear-gradient(135deg,#af2245,#f07855)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}>LUAPP</h1>
+    <div style={{ minHeight:'100vh', background:'#fff8f1', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'32px 20px' }}>
+
+      {/* Logo */}
+      <div style={{ marginBottom:28, textAlign:'center' }}>
+        <img src={LOGO} alt="LUAPP" style={{ height:44, width:'auto', objectFit:'contain' }} />
       </div>
 
-      <div className="w-full max-w-sm bg-white rounded-3xl p-8 shadow-sm border border-rose-100">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-1">Crear cuenta</h2>
-        <p className="text-sm text-gray-400 mb-6">100% discreto y anónimo</p>
+      <div style={{ width:'100%', maxWidth:400, background:'white', borderRadius:24, padding:'28px 24px', boxShadow:'0 2px 20px rgba(0,0,0,0.06)', border:'1px solid #f0d4d8' }}>
+        <h2 style={{ fontSize:22, fontWeight:700, color:'#1f2937', marginBottom:4 }}>Crear cuenta</h2>
+        <p style={{ fontSize:13, color:'#9ca3af', marginBottom:24 }}>100% discreto y anónimo</p>
 
-        <form onSubmit={registrar} className="space-y-4">
+        <form onSubmit={registrar} style={{ display:'flex', flexDirection:'column', gap:14 }}>
+
           <div>
-            <label className="text-xs tracking-widest text-gray-400 uppercase mb-1 block">Tu alias</label>
-            <input name="alias" value={form.alias} onChange={handleChange}
-              placeholder="Ej: Luna, Estrella..." required
-              className="w-full px-4 py-3 rounded-full border border-gray-200 text-sm outline-none focus:border-[#af2245]"/>
+            <label style={{ fontSize:11, fontWeight:600, color:'#6b7280', textTransform:'uppercase', letterSpacing:'0.07em', display:'block', marginBottom:5 }}>Tu alias</label>
+            <input value={alias} onChange={e=>setAlias(e.target.value)} placeholder="Ej: Luna, Estrella..." required className={inp} />
           </div>
 
           <div>
-            <label className="text-xs tracking-widest text-gray-400 uppercase mb-1 block">Email</label>
-            <input name="email" type="email" value={form.email} onChange={handleChange}
-              placeholder="tu@email.com" required
-              className="w-full px-4 py-3 rounded-full border border-gray-200 text-sm outline-none focus:border-[#af2245]"/>
+            <label style={{ fontSize:11, fontWeight:600, color:'#6b7280', textTransform:'uppercase', letterSpacing:'0.07em', display:'block', marginBottom:5 }}>Email</label>
+            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="tu@email.com" required className={inp} />
           </div>
 
           <div>
-            <label className="text-xs tracking-widest text-gray-400 uppercase mb-1 block">Contraseña</label>
-            <input name="password" type="password" value={form.password} onChange={handleChange}
-              placeholder="Mínimo 6 caracteres" required
-              className="w-full px-4 py-3 rounded-full border border-gray-200 text-sm outline-none focus:border-[#af2245]"/>
+            <label style={{ fontSize:11, fontWeight:600, color:'#6b7280', textTransform:'uppercase', letterSpacing:'0.07em', display:'block', marginBottom:5 }}>Contraseña</label>
+            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required className={inp} />
           </div>
 
           <div>
-            <label className="text-xs tracking-widest text-gray-400 uppercase mb-1 block">Confirmar contraseña</label>
-            <input name="confirmar" type="password" value={form.confirmar} onChange={handleChange}
-              placeholder="Repite tu contraseña" required
-              className="w-full px-4 py-3 rounded-full border border-gray-200 text-sm outline-none focus:border-[#af2245]"/>
+            <label style={{ fontSize:11, fontWeight:600, color:'#6b7280', textTransform:'uppercase', letterSpacing:'0.07em', display:'block', marginBottom:5 }}>Confirmar contraseña</label>
+            <input type="password" value={confirmar} onChange={e=>setConfirmar(e.target.value)} placeholder="Repite tu contraseña" required className={inp} />
           </div>
 
+          {/* País */}
           <div>
-            <label className="text-xs tracking-widest text-gray-400 uppercase mb-1 block">Ciudad</label>
-            <input name="ciudad" value={form.ciudad} onChange={handleChange}
-              placeholder="Bogotá, CDMX..." required
-              className="w-full px-4 py-3 rounded-full border border-gray-200 text-sm outline-none focus:border-[#af2245]"/>
+            <label style={{ fontSize:11, fontWeight:600, color:'#6b7280', textTransform:'uppercase', letterSpacing:'0.07em', display:'block', marginBottom:5 }}>País</label>
+            <select value={pais} onChange={e=>{setPais(e.target.value); setCiudad('')}} required className={inp} style={{ cursor:'pointer' }}>
+              {Object.keys(PAISES_CIUDADES).map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
           </div>
 
+          {/* Ciudad */}
           <div>
-            <label className="text-xs tracking-widest text-gray-400 uppercase mb-1 block">Edad</label>
-            <input name="edad" type="number" min="18" max="99"
-              value={form.edad} onChange={handleChange}
-              placeholder="Mayor de 18" required
-              className="w-full px-4 py-3 rounded-full border border-gray-200 text-sm outline-none focus:border-[#af2245]"/>
+            <label style={{ fontSize:11, fontWeight:600, color:'#6b7280', textTransform:'uppercase', letterSpacing:'0.07em', display:'block', marginBottom:5 }}>Ciudad</label>
+            <select value={ciudad} onChange={e=>setCiudad(e.target.value)} required className={inp} style={{ cursor:'pointer', color: ciudad ? '#1f2937' : '#9ca3af' }}>
+              <option value="">Selecciona tu ciudad...</option>
+              {ciudadesPais.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
 
+          {/* Edad */}
           <div>
-            <label className="text-xs tracking-widest text-gray-400 uppercase mb-2 block">Soy</label>
+            <label style={{ fontSize:11, fontWeight:600, color:'#6b7280', textTransform:'uppercase', letterSpacing:'0.07em', display:'block', marginBottom:5 }}>Edad</label>
+            <select value={edad} onChange={e=>setEdad(e.target.value)} required className={inp} style={{ cursor:'pointer', color: edad ? '#1f2937' : '#9ca3af' }}>
+              <option value="">Mayor de 18...</option>
+              {Array.from({length:62},(_,i)=>i+18).map(n => <option key={n} value={n}>{n} años</option>)}
+            </select>
+          </div>
+
+          {/* Soy */}
+          <div>
+            <label style={{ fontSize:11, fontWeight:600, color:'#6b7280', textTransform:'uppercase', letterSpacing:'0.07em', display:'block', marginBottom:8 }}>Soy</label>
             <div className="flex gap-3">
-              {['mujer', 'hombre'].map(g => (
-                <button key={g} type="button"
-                  onClick={() => setForm({ ...form, genero: g })}
-                  className="flex-1 py-2.5 rounded-full border text-sm capitalize transition-all"
-                  style={{
-                    background: form.genero === g ? 'linear-gradient(135deg,#af2245,#f07855)' : 'white',
-                    color: form.genero === g ? 'white' : '#594143',
-                    borderColor: form.genero === g ? 'transparent' : '#e0bec1'
-                  }}>
-                  {g}
-                </button>
-              ))}
+              {btnGenero('mujer','Mujer')}
+              {btnGenero('hombre','Hombre')}
             </div>
           </div>
 
+          {/* Busco */}
           <div>
-            <label className="text-xs tracking-widest text-gray-400 uppercase mb-2 block">Busco</label>
-            <div className="flex gap-3">
-              {['hombre', 'mujer', 'ambos'].map(b => (
-                <button key={b} type="button"
-                  onClick={() => setForm({ ...form, busca: b })}
-                  className="flex-1 py-2.5 rounded-full border text-xs capitalize transition-all"
-                  style={{
-                    background: form.busca === b ? 'linear-gradient(135deg,#af2245,#f07855)' : 'white',
-                    color: form.busca === b ? 'white' : '#594143',
-                    borderColor: form.busca === b ? 'transparent' : '#e0bec1'
-                  }}>
-                  {b}
-                </button>
-              ))}
+            <label style={{ fontSize:11, fontWeight:600, color:'#6b7280', textTransform:'uppercase', letterSpacing:'0.07em', display:'block', marginBottom:8 }}>Busco</label>
+            <div className="flex gap-2">
+              {btnBusca('hombre','Hombre')}
+              {btnBusca('mujer','Mujer')}
+              {btnBusca('ambos','Ambos')}
             </div>
           </div>
 
-          {error && <p className="text-red-400 text-xs">{error}</p>}
+          {error && <p style={{ fontSize:12, color:'#dc2626', textAlign:'center' }}>{error}</p>}
 
           <button type="submit" disabled={cargando}
-            className="w-full text-white py-3.5 rounded-full text-xs tracking-widest uppercase font-medium disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg,#af2245,#f07855)' }}>
+            style={{ width:'100%', padding:'13px 0', borderRadius:24, border:'none', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', fontSize:14, fontWeight:700, cursor: cargando ? 'not-allowed' : 'pointer', opacity: cargando ? 0.7 : 1, marginTop:4 }}>
             {cargando ? 'Creando cuenta...' : 'Crear mi cuenta'}
           </button>
         </form>
       </div>
 
-      <p className="text-center text-sm text-gray-400 mt-6">
+      <p style={{ textAlign:'center', fontSize:13, color:'#9ca3af', marginTop:20 }}>
         ¿Ya tienes cuenta?{' '}
-        <Link href="/login" className="text-[#af2245] font-medium">Ingresar</Link>
+        <Link href="/login" style={{ color:'#af2245', fontWeight:600 }}>Ingresar</Link>
       </p>
     </div>
   )
