@@ -62,6 +62,7 @@ export default function ExplorarPage() {
 
   const [edadMin, setEdadMin]         = useState(18)
   const [edadMax, setEdadMax]         = useState(60)
+  const [paisFiltro, setPaisFiltro]   = useState('')
   const [ciudadFiltro, setCiudadFiltro]     = useState('')
   const [estadoCivilFiltro, setEstadoCivilFiltro] = useState('')
   const [soloConFoto, setSoloConFoto] = useState(false)
@@ -305,6 +306,7 @@ export default function ExplorarPage() {
       <div style={{ background:'white', borderRadius:16, padding:16, border:'1px solid #f0d4d8' }}>
         <div style={{ fontSize:11, fontWeight:700, color:'#9ca3af', letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:14, display:'flex', alignItems:'center', gap:6 }}><IconFilter /> Filtros</div>
 
+        {/* 1. Buscando */}
         <div style={{ marginBottom:12 }}>
           <label style={{ fontSize:11, color:'#6b7280', fontWeight:600, display:'block', marginBottom:6 }}>Buscando</label>
           <div style={{ display:'flex', gap:6 }}>
@@ -314,12 +316,17 @@ export default function ExplorarPage() {
           </div>
         </div>
 
+        {/* 2. País */}
         <div style={{ marginBottom:12 }}>
-          <label style={{ fontSize:11, color:'#6b7280', fontWeight:600, display:'block', marginBottom:6 }}>Edad: {edadMin} – {edadMax}</label>
-          <input type="range" min="18" max="80" value={edadMin} onChange={e=>setEdadMin(Number(e.target.value))} style={{ width:'100%', marginBottom:4, accentColor:'#af2245' }} />
-          <input type="range" min="18" max="80" value={edadMax} onChange={e=>setEdadMax(Number(e.target.value))} style={{ width:'100%', accentColor:'#af2245' }} />
+          <label style={{ fontSize:11, color:'#6b7280', fontWeight:600, display:'block', marginBottom:6 }}>País</label>
+          <select value={paisFiltro} onChange={e=>{setPaisFiltro(e.target.value);setCiudadFiltro('')}}
+            style={{ width:'100%', padding:'8px 12px', borderRadius:8, fontSize:12, border:'1.5px solid #e5e7eb', background:'white', color:paisFiltro?'#1f2937':'#9ca3af', outline:'none', cursor:'pointer' }}>
+            <option value="">Todos los países</option>
+            {Object.keys(CIUDADES).map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
         </div>
 
+        {/* 3. Ciudad */}
         <div style={{ marginBottom:12, position:'relative' }}>
           <label style={{ fontSize:11, color:'#6b7280', fontWeight:600, display:'block', marginBottom:6 }}>Ciudad</label>
           <button onClick={()=>setCiudadOpen(!ciudadOpen)} style={{ width:'100%', padding:'8px 12px', borderRadius:8, textAlign:'left', border:'1.5px solid #e5e7eb', background:'white', fontSize:12, color:ciudadFiltro?'#1f2937':'#9ca3af', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer', fontWeight:500 }}>
@@ -328,9 +335,11 @@ export default function ExplorarPage() {
           {ciudadOpen && (
             <div style={{ position:'absolute', top:'110%', left:0, right:0, zIndex:50, background:'white', border:'1px solid #e5e7eb', borderRadius:12, maxHeight:200, overflowY:'auto', boxShadow:'0 8px 24px rgba(0,0,0,0.1)' }}>
               <button onClick={()=>{setCiudadFiltro('');setCiudadOpen(false)}} style={{ width:'100%', textAlign:'left', padding:'8px 14px', fontSize:12, color:'#9ca3af', background:'none', border:'none', cursor:'pointer' }}>Todas las ciudades</button>
-              {Object.entries(CIUDADES).map(([region, cities]) => (
+              {Object.entries(CIUDADES)
+                .filter(([region]) => !paisFiltro || region === paisFiltro)
+                .map(([region, cities]) => (
                 <div key={region}>
-                  <div style={{ padding:'5px 14px', fontSize:10, fontWeight:700, background:'#f9f5f0', color:'#9ca3af', letterSpacing:'0.06em', textTransform:'uppercase' }}>{region}</div>
+                  {!paisFiltro && <div style={{ padding:'5px 14px', fontSize:10, fontWeight:700, background:'#f9f5f0', color:'#9ca3af', letterSpacing:'0.06em', textTransform:'uppercase' }}>{region}</div>}
                   {cities.map(c => <button key={c} onClick={()=>{setCiudadFiltro(c);setCiudadOpen(false)}} style={{ width:'100%', textAlign:'left', padding:'7px 18px', fontSize:12, background:ciudadFiltro===c?'#fff0f3':'none', color:ciudadFiltro===c?'#af2245':'#374151', border:'none', cursor:'pointer', fontWeight:ciudadFiltro===c?600:400 }}>{c}</button>)}
                 </div>
               ))}
@@ -338,6 +347,7 @@ export default function ExplorarPage() {
           )}
         </div>
 
+        {/* 4. Situación sentimental */}
         <div style={{ marginBottom:12 }}>
           <label style={{ fontSize:11, color:'#6b7280', fontWeight:600, display:'block', marginBottom:6 }}>Situación sentimental</label>
           <select value={estadoCivilFiltro} onChange={e=>setEstadoCivilFiltro(e.target.value)} style={{ width:'100%', padding:'8px 12px', borderRadius:8, fontSize:12, border:'1.5px solid #e5e7eb', background:'white', color:estadoCivilFiltro?'#1f2937':'#9ca3af', outline:'none', cursor:'pointer' }}>
@@ -346,6 +356,27 @@ export default function ExplorarPage() {
           </select>
         </div>
 
+        {/* 5. Edad */}
+        <div style={{ marginBottom:12 }}>
+          <label style={{ fontSize:11, color:'#6b7280', fontWeight:600, display:'block', marginBottom:6 }}>Edad: {edadMin} – {edadMax} años</label>
+          <div style={{ position:'relative', height:20, marginBottom:8 }}>
+            <div style={{ position:'absolute', top:'50%', left:0, right:0, height:4, background:'#e5e7eb', borderRadius:2, transform:'translateY(-50%)' }} />
+            <div style={{ position:'absolute', top:'50%', height:4, background:'linear-gradient(135deg,#af2245,#f07855)', borderRadius:2, transform:'translateY(-50%)', left:`${(edadMin-18)/(80-18)*100}%`, right:`${100-(edadMax-18)/(80-18)*100}%` }} />
+            <input type="range" min="18" max="80" value={edadMin}
+              onChange={e => setEdadMin(Math.min(Number(e.target.value), edadMax - 1))}
+              style={{ position:'absolute', width:'100%', height:'100%', opacity:0, cursor:'pointer', zIndex:2 }} />
+            <input type="range" min="18" max="80" value={edadMax}
+              onChange={e => setEdadMax(Math.max(Number(e.target.value), edadMin + 1))}
+              style={{ position:'absolute', width:'100%', height:'100%', opacity:0, cursor:'pointer', zIndex:2 }} />
+            <div style={{ position:'absolute', top:'50%', transform:`translateX(-50%) translateY(-50%)`, left:`${(edadMin-18)/(80-18)*100}%`, width:16, height:16, borderRadius:'50%', background:'#af2245', boxShadow:'0 1px 4px rgba(0,0,0,0.2)', pointerEvents:'none' }} />
+            <div style={{ position:'absolute', top:'50%', transform:`translateX(-50%) translateY(-50%)`, left:`${(edadMax-18)/(80-18)*100}%`, width:16, height:16, borderRadius:'50%', background:'#af2245', boxShadow:'0 1px 4px rgba(0,0,0,0.2)', pointerEvents:'none' }} />
+          </div>
+          <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'#9ca3af' }}>
+            <span>{edadMin} años</span><span>{edadMax} años</span>
+          </div>
+        </div>
+
+        {/* 6. Solo con foto */}
         <label style={{ display:'flex', alignItems:'center', gap:8, fontSize:12, color:'#374151', cursor:'pointer', marginBottom:14, userSelect:'none' }}>
           <input type="checkbox" checked={soloConFoto} onChange={e=>setSoloConFoto(e.target.checked)} style={{ width:15, height:15, cursor:'pointer', accentColor:'#af2245' }} />
           Solo con foto
