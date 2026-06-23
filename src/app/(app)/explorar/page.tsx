@@ -21,14 +21,40 @@ const IconStar     = () => <svg width="14" height="14" viewBox="0 0 24 24" fill=
 const IconNew      = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
 
 const CIUDADES: Record<string, string[]> = {
-  'Colombia': ['Bogotá','Medellín','Cali','Barranquilla','Cartagena','Bucaramanga','Pereira','Santa Marta'],
-  'México': ['Ciudad de México','Guadalajara','Monterrey','Cancún','Puebla','Tijuana'],
-  'Argentina': ['Buenos Aires','Córdoba','Rosario','Mendoza'],
-  'Chile': ['Santiago','Valparaíso','Concepción'],
-  'Perú': ['Lima','Arequipa','Cusco'],
-  'Brasil': ['São Paulo','Río de Janeiro','Brasília'],
-  'España': ['Madrid','Barcelona','Valencia','Sevilla'],
-  'Portugal': ['Lisboa','Oporto'],
+  'México':       ['Ciudad de México','Guadalajara','Monterrey','Cancún','Puebla','Tijuana','León','Juárez','Torreón','San Luis Potosí','Mérida','Querétaro','Aguascalientes','Acapulco','Veracruz','Chihuahua','Hermosillo','Culiacán','Mazatlán','Oaxaca','Tuxtla Gutiérrez','Morelia'],
+  'Colombia':     ['Bogotá','Medellín','Cali','Barranquilla','Cartagena','Bucaramanga','Pereira','Santa Marta','Manizales','Ibagué','Cúcuta','Armenia','Villavicencio','Pasto','Montería','Neiva','Sincelejo','Valledupar','Popayán'],
+  'Argentina':    ['Buenos Aires','Córdoba','Rosario','Mendoza','La Plata','Tucumán','Mar del Plata','Salta','Santa Fe','San Juan','Resistencia','Santiago del Estero','Corrientes','Posadas','Neuquén','Bahía Blanca'],
+  'España':       ['Madrid','Barcelona','Valencia','Sevilla','Zaragoza','Málaga','Murcia','Palma','Las Palmas','Bilbao','Alicante','Córdoba','Valladolid','Vigo','Gijón','Granada','Tenerife'],
+  'Chile':        ['Santiago','Valparaíso','Concepción','Antofagasta','Viña del Mar','La Serena','Temuco','Rancagua','Puerto Montt','Iquique','Arica','Talca'],
+  'Perú':         ['Lima','Arequipa','Cusco','Trujillo','Chiclayo','Piura','Iquitos','Huancayo','Tacna','Pucallpa'],
+  'Venezuela':    ['Caracas','Maracaibo','Valencia','Barquisimeto','Maracay','Ciudad Guayana','Barcelona','San Cristóbal','Maturín','Cumana'],
+  'Ecuador':      ['Guayaquil','Quito','Cuenca','Ambato','Manta','Portoviejo','Loja','Esmeraldas','Riobamba'],
+  'Bolivia':      ['La Paz','Santa Cruz de la Sierra','Cochabamba','Oruro','Sucre','Potosí','Tarija'],
+  'Paraguay':     ['Asunción','Ciudad del Este','San Lorenzo','Luque','Capiatá','Lambaré','Fernando de la Mora'],
+  'Uruguay':      ['Montevideo','Salto','Ciudad de la Costa','Paysandú','Las Piedras','Rivera','Maldonado'],
+  'Brasil':       ['São Paulo','Río de Janeiro','Brasília','Salvador','Fortaleza','Belo Horizonte','Manaus','Curitiba','Recife','Porto Alegre','Belém','Goiânia'],
+  'Guatemala':    ['Ciudad de Guatemala','Mixco','Villa Nueva','Quetzaltenango','Escuintla','Cobán'],
+  'Costa Rica':   ['San José','Alajuela','Desamparados','Heredia','Liberia','Cartago','Puntarenas'],
+  'Panamá':       ['Ciudad de Panamá','San Miguelito','Tocumen','David','La Chorrera','Colón'],
+  'Honduras':     ['Tegucigalpa','San Pedro Sula','Choloma','La Ceiba','El Progreso','Comayagua'],
+  'El Salvador':  ['San Salvador','Soyapango','Santa Ana','San Miguel','Apopa','Mejicanos'],
+  'Nicaragua':    ['Managua','León','Masaya','Chinandega','Matagalpa','Estelí'],
+  'República Dominicana': ['Santo Domingo','Santiago de los Caballeros','La Romana','San Pedro de Macorís','Puerto Plata'],
+  'Cuba':         ['La Habana','Santiago de Cuba','Camagüey','Holguín','Santa Clara','Guantánamo'],
+  'Puerto Rico':  ['San Juan','Bayamón','Carolina','Ponce','Caguas','Guaynabo'],
+  'Estados Unidos': ['Miami','Nueva York','Los Ángeles','Chicago','Houston','San Antonio','Dallas','Phoenix','San Diego','Las Vegas','Orlando','Atlanta'],
+  'Portugal':     ['Lisboa','Oporto','Amadora','Braga','Setúbal','Coimbra','Funchal'],
+  'Francia':      ['París','Marsella','Lyon','Toulouse','Niza','Nantes','Estrasburgo','Montpellier','Burdeos'],
+  'Italia':       ['Roma','Milán','Nápoles','Turín','Palermo','Génova','Florencia','Venecia','Bolonia'],
+  'Alemania':     ['Berlín','Hamburgo','Múnich','Colonia','Fráncfort','Stuttgart','Düsseldorf','Dortmund','Essen'],
+  'Reino Unido':  ['Londres','Birmingham','Leeds','Glasgow','Sheffield','Bradford','Mánchester','Liverpool','Edimburgo'],
+  'Suiza':        ['Zúrich','Ginebra','Berna','Lausana','Basilea','Lugano'],
+  'Bélgica':      ['Bruselas','Amberes','Gante','Charleroi','Lieja','Brujas'],
+  'Países Bajos': ['Ámsterdam','Róterdam','La Haya','Utrecht','Eindhoven'],
+  'Suecia':       ['Estocolmo','Gotemburgo','Malmö','Uppsala','Linköping'],
+  'Noruega':      ['Oslo','Bergen','Trondheim','Stavanger','Drammen'],
+  'Canadá':       ['Toronto','Montreal','Vancouver','Calgary','Edmonton','Ottawa'],
+  'Australia':    ['Sídney','Melbourne','Brisbane','Perth','Adelaida','Canberra'],
 }
 const ESTADOS_CIVILES = ['Soltero','Casado','Divorciado','Viudo','Complicado']
 const LOGO = 'https://luapp.co/images/logo/logo-color.webp'
@@ -62,7 +88,7 @@ export default function ExplorarPage() {
 
   const [edadMin, setEdadMin]         = useState(18)
   const [edadMax, setEdadMax]         = useState(60)
-  const [paisFiltro, setPaisFiltro]   = useState('')
+  const [paisFiltro, setPaisFiltro]   = useState('México')
   const [ciudadFiltro, setCiudadFiltro]     = useState('')
   const [estadoCivilFiltro, setEstadoCivilFiltro] = useState('')
   const [soloConFoto, setSoloConFoto] = useState(false)
