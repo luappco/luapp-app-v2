@@ -387,24 +387,20 @@ export default function ExplorarPage() {
         </div>
 
         {/* 3. Ciudad */}
-        <div style={{ marginBottom:12, position:'relative' }}>
+        <div style={{ marginBottom:12 }}>
           <label style={{ fontSize:11, color:'#6b7280', fontWeight:600, display:'block', marginBottom:6 }}>Ciudad</label>
-          <button onClick={()=>setCiudadOpen(!ciudadOpen)} style={{ width:'100%', padding:'8px 12px', borderRadius:8, textAlign:'left', border:'1.5px solid #e5e7eb', background:'white', fontSize:12, color:ciudadFiltro?'#1f2937':'#9ca3af', display:'flex', justifyContent:'space-between', alignItems:'center', cursor:'pointer', fontWeight:500 }}>
-            {ciudadFiltro||'Todas las ciudades'} <IconChevDown />
-          </button>
-          {ciudadOpen && (
-            <div style={{ position:'absolute', top:'110%', left:0, right:0, zIndex:50, background:'white', border:'1px solid #e5e7eb', borderRadius:12, maxHeight:200, overflowY:'auto', boxShadow:'0 8px 24px rgba(0,0,0,0.1)' }}>
-              <button onClick={()=>{setCiudadFiltro('');setCiudadOpen(false)}} style={{ width:'100%', textAlign:'left', padding:'8px 14px', fontSize:12, color:'#9ca3af', background:'none', border:'none', cursor:'pointer' }}>Todas las ciudades</button>
-              {Object.entries(CIUDADES)
-                .filter(([region]) => !paisFiltro || region === paisFiltro)
-                .map(([region, cities]) => (
-                <div key={region}>
-                  {!paisFiltro && <div style={{ padding:'5px 14px', fontSize:10, fontWeight:700, background:'#f9f5f0', color:'#9ca3af', letterSpacing:'0.06em', textTransform:'uppercase' }}>{region}</div>}
-                  {cities.map(c => <button key={c} onClick={()=>{setCiudadFiltro(c);setCiudadOpen(false)}} style={{ width:'100%', textAlign:'left', padding:'7px 18px', fontSize:12, background:ciudadFiltro===c?'#fff0f3':'none', color:ciudadFiltro===c?'#af2245':'#374151', border:'none', cursor:'pointer', fontWeight:ciudadFiltro===c?600:400 }}>{c}</button>)}
-                </div>
-              ))}
-            </div>
-          )}
+          <select value={ciudadFiltro} onChange={e => setCiudadFiltro(e.target.value)}
+            style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'1.5px solid #e5e7eb', background:'white', fontSize:12, color: ciudadFiltro ? '#1f2937' : '#9ca3af', outline:'none', cursor:'pointer' }}>
+            <option value="">Todas las ciudades</option>
+            {Object.entries(CIUDADES)
+              .filter(([pais]) => !paisFiltro || pais === paisFiltro)
+              .map(([pais, cities]) => (
+                <optgroup key={pais} label={pais}>
+                  {cities.map(c => <option key={c} value={c}>{c}</option>)}
+                </optgroup>
+              ))
+            }
+          </select>
         </div>
 
         {/* 4. Situación sentimental */}
