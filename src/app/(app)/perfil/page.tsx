@@ -314,6 +314,20 @@ export default function PerfilPage() {
           {/* ── Columna derecha ── */}
           <div>
 
+            {/* Botones de acceso rápido */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:14 }}>
+              {[
+                { icon:<IconChat />,  label:'Chat',      action: () => router.push('/mensajes') },
+                { icon:<IconMsg />,   label:'Mensajes',  action: () => router.push('/mensajes') },
+                { icon:<IconHeart />, label:'Flechazos', action: () => router.push('/explorar') },
+              ].map((b, i) => (
+                <button key={i} onClick={b.action}
+                  style={{ padding:'11px 0', borderRadius:10, border:'none', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', fontSize:13, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                  {b.icon} {b.label}
+                </button>
+              ))}
+            </div>
+
             {mensaje && (
               <div style={{ padding:'9px 14px', borderRadius:10, background: mensaje.includes('Máx')||mensaje.includes('Error') ? '#fef2f2' : '#f0fdf4', border:`1px solid ${mensaje.includes('Máx')||mensaje.includes('Error') ? '#fecaca' : '#bbf7d0'}`, fontSize:12, color: mensaje.includes('Máx')||mensaje.includes('Error') ? '#dc2626' : '#16a34a', textAlign:'center', marginBottom:12 }}>
                 {mensaje}
