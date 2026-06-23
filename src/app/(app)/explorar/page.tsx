@@ -363,12 +363,16 @@ export default function ExplorarPage() {
       <style>{`
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes fadeIn{from{opacity:0;transform:scale(0.97)}to{opacity:1;transform:scale(1)}}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
         ::-webkit-scrollbar{display:none}
+        .fab-filter{display:none}
         @media(max-width:768px){
           .desktop-sidebar{display:none!important}
           .mobile-bottom-nav{display:flex!important}
           .main-grid{grid-template-columns:1fr!important}
           .profiles-grid{grid-template-columns:repeat(2,1fr)!important}
+          .fab-filter{display:flex!important}
+          .explorar-topbar{display:none!important}
         }
         @media(min-width:769px){
           .mobile-bottom-nav{display:none!important}
@@ -446,6 +450,12 @@ export default function ExplorarPage() {
           </button>
         ))}
       </div>
+
+      {/* FAB filtros móvil */}
+      <button className="fab-filter" onClick={() => setDrawerOpen(true)}
+        style={{ position:'fixed', bottom:80, right:20, zIndex:45, width:52, height:52, borderRadius:'50%', border:'none', background:'linear-gradient(135deg,#af2245,#f07855)', color:'white', cursor:'pointer', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 16px rgba(175,34,69,0.4)', animation:'slideUp 0.3s ease' }}>
+        <IconFilter />
+      </button>
 
       {/* Drawer filtros móvil */}
       {drawerOpen && (
